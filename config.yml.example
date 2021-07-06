@@ -1,0 +1,7 @@
+api_creds:
+    binance1_access_code: <your access code>
+    binance1_secret_code: <your secret code>
+
+telegram:
+    bot_token: <your token>
+    bot_chatID: <your chat ID>
