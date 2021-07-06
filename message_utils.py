@@ -1,6 +1,7 @@
 import requests
 import yaml
 
+# To create your Telegram bot read this:
 # https://medium.com/@ManHay_Hong/how-to-create-a-telegram-bot-and-send-messages-with-python-4cf314d9fa3e
 
 def get_telegram_bot_ids():
