@@ -29,8 +29,11 @@ def init():
     return Client(api_key, api_secret)
 
 def get_last_timestamp_from(df):
-    last_timestamp_from_df = df.index[-1]
-    last_timestamp_from_df = int(datetime.timestamp(last_timestamp_from_df))
+    if df.size > 0:
+        last_timestamp_from_df = df.index[-1]
+        last_timestamp_from_df = int(datetime.timestamp(last_timestamp_from_df))
+    else:
+        last_timestamp_from_df = 0
     
     return last_timestamp_from_df * 1000
 
@@ -45,13 +48,17 @@ def update_historical_data(df, pair, interval):
         timestamp = last_timestamp_from_df
 
     df_binance = get_crypto_data(client, pair, interval, timestamp)
-    df_binance_before = df_binance[df_binance.index < df.index[0]]
-    df_binance_after = df_binance[df_binance.index > df.index[-1]]
 
-    df = pd.concat([df_binance_before, df, df_binance_after])
-    df.drop_duplicates(inplace=True)
+    if df.size > 0:
+        df_binance_before = df_binance[df_binance.index < df.index[0]]
+        df_binance_after = df_binance[df_binance.index > df.index[-1]]
 
-    return df
+        df = pd.concat([df_binance_before, df, df_binance_after])
+        df.drop_duplicates(inplace=True)
+
+        return df
+    else:
+        return df_binance
 
 def get_twm():
     api_key, api_secret = get_credentials()
