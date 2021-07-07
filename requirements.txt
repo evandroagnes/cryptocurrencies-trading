@@ -7,4 +7,4 @@ statsmodels==0.12.2
 requests==2.25.1
 PyYAML==5.3.1
 python-binance==1.0.12
-bt==0.2.8
+bt==0.2.9
