@@ -11,6 +11,8 @@ def initialize_ohlc_df():
         'LowPrice', 
         'ClosePrice', 
         'Volume'])
+    
+    df.set_index('OpenTime', inplace=True)
 
     return df
 
