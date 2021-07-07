@@ -14,8 +14,8 @@ def initialize_ohlc_df():
 
     return df
 
-def get_historical_data(csv_file='BTCUSDT-binance.csv', symbol='BTCUSDT', interval='1m'):
-    #csv_file = 'BTCUSDT-binance.csv'
+def get_historical_data(csv_file='BTCUSDT-1m-binance.csv', symbol='BTCUSDT', interval='1m'):
+    #csv_file = 'BTCUSDT-1m-binance.csv'
     df = pd.read_csv('data/' + csv_file)
     df['OpenTime'] = pd.to_datetime(df['OpenTime'])
     df.set_index('OpenTime', inplace=True)
