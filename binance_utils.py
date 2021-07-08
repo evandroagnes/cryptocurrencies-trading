@@ -48,6 +48,8 @@ def update_historical_data(df, pair, interval):
         timestamp = last_timestamp_from_df
 
     df_binance = get_crypto_data(client, pair, interval, timestamp)
+    # remove incomplete candle
+    df_binance = df_binance[:-1]
 
     if df.size > 0:
         df_binance_before = df_binance[df_binance.index < df.index[0]]
