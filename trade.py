@@ -7,7 +7,7 @@ from trade_utils import get_historical_data, resample_data, process_candle
 
 symbol = 'BTCUSDT'
 # valid intervals - 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
-interval = '1h'
+interval = '1m'
 
 df = pd.DataFrame()
 
@@ -20,6 +20,11 @@ def handle_socket_message(msg):
     candle = msg['k']
     timestamp = candle['t'] / 1000
     timestamp = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+    timestamp_close = candle['T'] / 1000
+    timestamp_close = datetime.fromtimestamp(timestamp_close).strftime('%Y-%m-%d %H:%M:%S')
+
+    #print(timestamp, timestamp_close, candle)
 
     is_candle_closed = candle['x']
 
@@ -34,12 +39,8 @@ def handle_socket_message(msg):
         
         if df.size == 0:
             df = get_historical_data()
-            df = resample_data(df, '1H')
         
-        #print(df.tail())
-        #print(candle)
-
-        #process data
+        # process data
         df = process_candle(df, new_row)
 
 def main():

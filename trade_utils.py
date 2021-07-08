@@ -42,6 +42,7 @@ def resample_data(df, time_resample):
 
     df_resample = df.resample(time_resample).agg(summaries)
     df_resample.dropna(inplace=True)
+    # remove incomplete candle
     df_resample = df_resample[:-1]
 
     return df_resample
@@ -66,14 +67,19 @@ def update_signal_by_strategy(df):
 
 def process_candle(df, new_row):
     df = add_row(df, new_row)
-    df_trade = update_signal_by_strategy(df.copy())
 
-    if df_trade['signal'][-2] != df_trade['signal'][-1]:
-        if df_trade['signal'][-1] == 1:
-            message = 'Price cross above SMA 50, BUY'
-        else:
-            message = 'Price cross below SMA 50, SELL'
-        
-        telegram_bot_sendtext(message)
+    # 1h trade
+    # TODO add parameter to trade in different intervals or add a list of intervals to trade
+    if df.index.hour[-2] != df.index.hour[-1]:
+        df_trade = resample_data(df, '1H')
+        df_trade = update_signal_by_strategy(df_trade)
+
+        if df_trade['signal'][-2] != df_trade['signal'][-1]:
+            if df_trade['signal'][-1] == 1:
+                message = 'Price cross above SMA 50, BUY'
+            else:
+                message = 'Price cross below SMA 50, SELL'
+            
+            telegram_bot_sendtext(message)
 
     return df
