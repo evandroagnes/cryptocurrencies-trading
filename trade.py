@@ -53,37 +53,48 @@ def handle_socket_message(msg):
         if debug:
             print(df.tail())
 
-def main():
-    twm = get_twm()
-    twm.start()
-
-    twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
-    
+def main(mode):
     try:
+        twm = get_twm()
+        twm.start()
+
+        twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
+    
         while 1:
-            selection = input('Your selection? (h for help) ')    #python 3.x, for 2.x use raw_input
-            
-            if len(selection) > 1:
-                print('Enter one character only.')
-            elif selection == 'h':
-                print('Select only one character option from available list:')
-                print('\n\t h : help')
-                print('\n\t e : exit')
-                print('\n\t p : print total stored candles')
-            elif selection == 'e':
-                print('Exiting the program and stopping all processes.')
-                # close connection
-                twm.stop()
-                sys.exit('Finished and exiting.')
-            elif selection == 'p':
-                print(df.tail())
-            else:
-                print('Unknown option.')
+            if mode == 1:
+                selection = input('Your selection? (h for help) ')    #python 3.x, for 2.x use raw_input
+                
+                if len(selection) > 1:
+                    print('Enter one character only.')
+                elif selection == 'h':
+                    print('Select only one character option from available list:')
+                    print('\n\t h : help')
+                    print('\n\t e : exit')
+                    print('\n\t p : print total stored candles')
+                elif selection == 'e':
+                    print('Exiting the program and stopping all processes.')
+                    # close connection
+                    twm.stop()
+                    sys.exit('Finished and exiting.')
+                elif selection == 'p':
+                    print(df.tail())
+                else:
+                    print('Unknown option.')
     except KeyboardInterrupt:
+        print(df.tail())
         print('Exiting the program and stopping all processes.')
         # close connection
         twm.stop()
         sys.exit('Finished and exiting.')
 
 if __name__ == "__main__":
-    main()
+    n = len(sys.argv)
+    if n != 2:
+        print("You must inform one argument: 1 for interactive or 2 from process!")
+        sys.exit('Finished and exiting.')
+    elif (sys.argv[1] == '1' or sys.argv[1] == '2'):
+        mode = int(sys.argv[1])
+        main(mode)
+    else:
+        print("You must inform one argument: 1 for interactive or 2 from process!")
+        sys.exit('Finished and exiting.')
