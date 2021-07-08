@@ -5,6 +5,9 @@ from datetime import datetime
 from binance_utils import get_twm
 from trade_utils import get_historical_data, resample_data, process_candle
 
+# Set to True to print debug messages from code
+debug = False
+
 symbol = 'BTCUSDT'
 # valid intervals - 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
 interval = '1m'
@@ -24,7 +27,8 @@ def handle_socket_message(msg):
     timestamp_close = candle['T'] / 1000
     timestamp_close = datetime.fromtimestamp(timestamp_close).strftime('%Y-%m-%d %H:%M:%S')
 
-    #print(timestamp, timestamp_close, candle)
+    if debug:
+        print(timestamp, timestamp_close, candle)
 
     is_candle_closed = candle['x']
 
@@ -37,11 +41,17 @@ def handle_socket_message(msg):
             'ClosePrice':candle['c'], 
             'Volume':candle['v']}
         
+        if debug:
+            print(new_row)
+
         if df.size == 0:
             df = get_historical_data()
         
         # process data
         df = process_candle(df, new_row)
+
+        if debug:
+            print(df.tail())
 
 def main():
     twm = get_twm()
