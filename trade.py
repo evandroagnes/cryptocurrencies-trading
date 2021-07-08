@@ -90,12 +90,16 @@ def main(mode):
 
 if __name__ == "__main__":
     n = len(sys.argv)
-    if n != 2:
-        print("You must inform one argument: 1 for interactive or 2 from process!")
+    mode = 0
+    if n > 2:
+        print("You must inform zero or one argument: 1 for interactive or 2 from process!")
         sys.exit('Finished and exiting.')
+    elif n == 1:
+        mode = 1
     elif (sys.argv[1] == '1' or sys.argv[1] == '2'):
         mode = int(sys.argv[1])
-        main(mode)
     else:
-        print("You must inform one argument: 1 for interactive or 2 from process!")
+        print("Argument invalid: 1 for interactive or 2 from process!")
         sys.exit('Finished and exiting.')
+    
+    main(mode)
