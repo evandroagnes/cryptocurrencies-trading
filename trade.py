@@ -55,6 +55,7 @@ def handle_socket_message(msg):
 
 def main(mode):
     try:
+        print('Trade started...')
         twm = get_twm()
         twm.start()
 
