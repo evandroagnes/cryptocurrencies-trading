@@ -68,17 +68,30 @@ def update_signal_by_strategy(df):
 def process_candle(df, new_row):
     df = add_row(df, new_row)
 
-    # 1h trade
     # TODO add parameter to trade in different intervals or add a list of intervals to trade
+    # 1h trade
     if df.index.hour[-2] != df.index.hour[-1]:
         df_trade = resample_data(df, '1H')
         df_trade = update_signal_by_strategy(df_trade)
 
         if df_trade['signal'][-2] != df_trade['signal'][-1]:
             if df_trade['signal'][-1] == 1:
-                message = 'Price cross above SMA 50, BUY'
+                message = '1h Trade: Price cross above SMA 50 -> BUY!'
             else:
-                message = 'Price cross below SMA 50, SELL'
+                message = '1h Trade: Price cross below SMA 50 -> SELL!'
+            
+            telegram_bot_sendtext(message)
+
+    # 1D trade
+    if df.index.day[-2] != df.index.day[-1]:
+        df_trade = resample_data(df, '1D')
+        df_trade = update_signal_by_strategy(df_trade)
+
+        if df_trade['signal'][-2] != df_trade['signal'][-1]:
+            if df_trade['signal'][-1] == 1:
+                message = '1D Trade: Price cross above SMA 50 -> BUY!!!'
+            else:
+                message = '1D Trade: Price cross below SMA 50 -> SELL!!!'
             
             telegram_bot_sendtext(message)
 
