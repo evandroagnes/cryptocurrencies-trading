@@ -14,8 +14,8 @@ def buy_and_hold_strategy(price_data, name='benchmark'):
 
 def signal_above_strategy(price_data, price_signal, name):
     # the column names must be the same
-    price_data.columns = ['price']
-    price_signal.columns = ['price']
+    price_data.columns = ['value']
+    price_signal.columns = ['value']
 
     bt_strategy = bt.Strategy(name, 
                               [bt.algos.SelectWhere(price_data > price_signal),
@@ -26,8 +26,8 @@ def signal_above_strategy(price_data, price_signal, name):
 
 def signal_strategy(price_data, signal, name):
     # the column names must be the same
-    price_data.columns = ['price']
-    signal.columns = ['price']
+    price_data.columns = ['value']
+    signal.columns = ['value']
 
     s = bt.Strategy(name,
                     [bt.algos.WeighTarget(signal), 
@@ -37,8 +37,8 @@ def signal_strategy(price_data, signal, name):
 
 def get_cross_signal(short_data, long_data):
     # the column names must be the same
-    short_data.columns = ['price']
-    long_data.columns = ['price']
+    short_data.columns = ['value']
+    long_data.columns = ['value']
 
     signal = long_data.copy()
     signal[short_data > long_data] = 1.0
@@ -48,8 +48,8 @@ def get_cross_signal(short_data, long_data):
     return signal
 
 def get_macd_signal(signal_macd, macd_value):
-    signal_macd.columns = ['macd']
-    macd_value.columns = ['macd']
+    signal_macd.columns = ['value']
+    macd_value.columns = ['value']
     
     signal = macd_value.copy()
 
@@ -66,3 +66,57 @@ def get_rsi_signal(signal):
 
     return signal
 
+def get_5_minute_signal(price_data, macd_history, ema):
+    price_data.columns = ['value']
+    macd_history.columns = ['value']
+    ema.columns = ['value']
+
+    signal = price_data.copy()
+    long = False
+
+    for i in range(price_data.size):
+        if price_data.iloc[i]['value'] > ema.iloc[i]['value'] and macd_history.iloc[i]['value'] > 0:
+            signal.iloc[i] = 1.0
+            long = True
+        
+        if price_data.iloc[i]['value'] < ema.iloc[i]['value'] and long:
+            signal.iloc[i] = -1.0
+
+    signal[(signal != 1.0) & (signal != 1.0)] = 0.0
+
+    return signal
+
+def get_sma_macd_signal(price_data, short_data, long_data, macd_data):
+    """ 
+    - Wait for price data to be above SMA 50 (short) and SMA 100 (long);
+    - If MACD is positive at least for the last 5 bars only (not more because in this case the signal can be weak): LONG;
+    - Otherwise wait for the next positive MACD signal.
+    - TODO Stop on the minor price of last 5 bars;
+    - TODO Exit of half investiment on 2x the difference from entry to stop
+    - Exit on price_data below SMA 50 (short)
+    """
+    price_data.columns = ['value']
+    short_data.columns = ['value']
+    long_data.columns = ['value']
+    macd_data.columns = ['value']
+
+    signal = price_data.copy()
+    long = False
+    for i in range(price_data.size):
+        if price_data.iloc[i]['value'] > short_data.iloc[i]['value'] and price_data.iloc[i]['value'] > long_data.iloc[i]['value']:
+            num_positive_candles = 0
+            pos = i
+            while (pos > 0 and macd_data.iloc[pos]['value'] > 0):
+                pos-=1
+                num_positive_candles+=1
+            
+            if num_positive_candles < 6:
+                signal.iloc[i] = 1.0
+                long = True
+        
+        if price_data.iloc[i]['value'] < short_data.iloc[i]['value'] and long:
+            signal.iloc[i] = -1.0
+    
+    signal[(signal != 1.0) & (signal != 1.0)] = 0.0
+
+    return signal
