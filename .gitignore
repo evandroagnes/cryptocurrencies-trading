@@ -130,4 +130,5 @@ dmypy.json
 
 # Personal data
 config.yml
-data/BTCUSDT-1m-binance-all.csv
+data/*-all.csv
+data/*-all.csv
