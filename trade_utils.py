@@ -74,6 +74,8 @@ def process_candle(df, new_row):
         df_trade = resample_data(df, '1H')
         df_trade = update_signal_by_strategy(df_trade)
 
+        print(df_trade[['ClosePrice', 'SMA50', 'signal']].tail())
+
         if df_trade['signal'][-2] != df_trade['signal'][-1]:
             if df_trade['signal'][-1] == 1:
                 message = '1h Trade: Price cross above SMA 50 -> BUY!'
