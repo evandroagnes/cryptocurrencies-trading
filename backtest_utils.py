@@ -67,6 +67,9 @@ def get_rsi_signal(signal):
     return signal
 
 def get_5_minute_signal(price_data, macd_history, ema):
+    """
+    https://www.investopedia.com/articles/forex/08/five-minute-momo.asp
+    """
     price_data.columns = ['value']
     macd_history.columns = ['value']
     ema.columns = ['value']
@@ -89,10 +92,10 @@ def get_5_minute_signal(price_data, macd_history, ema):
 def get_sma_macd_signal(price_data, short_data, long_data, macd_data):
     """ 
     - Wait for price data to be above SMA 50 (short) and SMA 100 (long);
-    - If MACD is positive at least for the last 5 bars only (not more because in this case the signal can be weak): LONG;
+    - If MACD is positive at least for the last 5 bars only (not more because in this case, the signal can be weak): LONG;
     - Otherwise wait for the next positive MACD signal.
-    - TODO Stop on the minor price of last 5 bars;
-    - TODO Exit of half investiment on 2x the difference from entry to stop
+    - TODO Stop on the minor price of the last 5 bars;
+    - TODO Exit of half investment on 2x the difference from entry to stop
     - Exit on price_data below SMA 50 (short)
     """
     price_data.columns = ['value']
