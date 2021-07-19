@@ -59,8 +59,8 @@ def get_macd_signal(signal_macd, macd_value):
     return signal 
 
 def get_rsi_signal(signal):
-    signal[signal > 70] = 1.0
-    signal[signal < 30] = -1.0
+    signal[signal > 70] = -1.0
+    signal[signal < 30] = 1.0
     signal[(signal <= 70) & (signal >= 30)] = 0.0
     signal[signal.isnull()] = 0.0
 
