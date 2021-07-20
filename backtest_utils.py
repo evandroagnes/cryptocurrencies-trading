@@ -66,6 +66,17 @@ def get_rsi_signal(signal):
 
     return signal
 
+def get_rsi_adx_signal(signal, adx):
+    signal.columns = ['value']
+    adx.columns = ['value']
+
+    signal[(signal > 70) & (adx > 25)] = -1.0
+    signal[(signal < 30) & (adx > 25)] = 1.0
+    signal[(signal <= 70) & (signal >= 30)] = 0.0
+    signal[(signal != 1.0) & (signal != 1.0)] = 0.0
+
+    return signal
+
 def get_5_minute_signal(price_data, macd_history, ema):
     """
     https://www.investopedia.com/articles/forex/08/five-minute-momo.asp
@@ -119,6 +130,26 @@ def get_sma_macd_signal(price_data, short_data, long_data, macd_data):
         
         if price_data.iloc[i]['value'] < short_data.iloc[i]['value'] and long:
             signal.iloc[i] = -1.0
+    
+    signal[(signal != 1.0) & (signal != 1.0)] = 0.0
+
+    return signal
+
+def get_rsi_plus_signal(signal):
+    """ 
+    - 
+    """
+    signal = signal.copy()
+    signal.columns = ['value']
+    long = False
+    for i in range(1, signal.size):
+        if signal.iloc[i-1]['value'] > 70 and signal.iloc[i]['value'] <= 70 and long:
+            signal.iloc[i] = -1.0
+            long = False
+        
+        if signal.iloc[i]['value'] < 30 and not long:
+            signal.iloc[i] = 1.0
+            long = True
     
     signal[(signal != 1.0) & (signal != 1.0)] = 0.0
 
