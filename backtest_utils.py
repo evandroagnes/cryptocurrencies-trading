@@ -58,10 +58,10 @@ def get_macd_signal(signal_macd, macd_value):
 
     return signal 
 
-def get_rsi_signal(signal):
-    signal[signal > 70] = -1.0
-    signal[signal < 30] = 1.0
-    signal[(signal <= 70) & (signal >= 30)] = 0.0
+def get_rsi_signal(signal, overbought_value=70, oversold_value=30):
+    signal[signal > overbought_value] = -1.0
+    signal[signal < oversold_value] = 1.0
+    signal[(signal <= overbought_value) & (signal >= oversold_value)] = 0.0
     signal[signal.isnull()] = 0.0
 
     return signal
@@ -147,7 +147,7 @@ def get_rsi_plus_signal(signal):
             signal.iloc[i] = -1.0
             long = False
         
-        if signal.iloc[i]['value'] < 30 and not long:
+        if signal.iloc[i-1]['value'] < 30 and signal.iloc[i]['value'] >= 30 and not long:
             signal.iloc[i] = 1.0
             long = True
     
