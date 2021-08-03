@@ -58,9 +58,11 @@ def get_macd_signal(signal_macd, macd_value):
 
     return signal 
 
-def get_rsi_signal(signal, overbought_value=70, oversold_value=30):
-    signal[signal > overbought_value] = -1.0
+def get_rsi_signal(signal, overbought_value=70.0, oversold_value=30.0):
     signal[signal < oversold_value] = 1.0
+    signal[signal > overbought_value] = -1.0
+    #signal[(signal <= overbought_value) & (signal >= oversold_value)] = np.nan
+    #signal.fillna(method="ffill", inplace=True)
     signal[(signal <= overbought_value) & (signal >= oversold_value)] = 0.0
     signal[signal.isnull()] = 0.0
 
@@ -70,10 +72,10 @@ def get_rsi_adx_signal(signal, adx):
     signal.columns = ['value']
     adx.columns = ['value']
 
-    signal[(signal > 70) & (adx > 25)] = -1.0
     signal[(signal < 30) & (adx > 25)] = 1.0
+    signal[(signal > 70) & (adx > 25)] = -1.0
     signal[(signal <= 70) & (signal >= 30)] = 0.0
-    signal[(signal != 1.0) & (signal != 1.0)] = 0.0
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
 
     return signal
 
@@ -96,7 +98,7 @@ def get_5_minute_signal(price_data, macd_history, ema):
         if price_data.iloc[i]['value'] < ema.iloc[i]['value'] and long:
             signal.iloc[i] = -1.0
 
-    signal[(signal != 1.0) & (signal != 1.0)] = 0.0
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
 
     return signal
 
@@ -131,7 +133,7 @@ def get_sma_macd_signal(price_data, short_data, long_data, macd_data):
         if price_data.iloc[i]['value'] < short_data.iloc[i]['value'] and long:
             signal.iloc[i] = -1.0
     
-    signal[(signal != 1.0) & (signal != 1.0)] = 0.0
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
 
     return signal
 
@@ -151,6 +153,34 @@ def get_rsi_plus_signal(signal):
             signal.iloc[i] = 1.0
             long = True
     
-    signal[(signal != 1.0) & (signal != 1.0)] = 0.0
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+
+    return signal
+
+def get_adx_macd_signal(macd, di_plus, di_minus, adx):
+    """
+    Buy Entry Rules:
+    MACD trading above zero
+    +Di signal line crosses higher than the D- line
+    ADX line is higher than 20 and rises upwards
+    Make a buy where the three conditions meet on the candlestick
+
+    Sell Entry Rules:
+    MACD trading below zero
+    D- line crosses higher than D+ line
+    ADX line rises above 20
+    Open a short trade where these conditions meet
+    """
+    macd.columns = ['value']
+    di_plus.columns = ['value']
+    di_minus.columns = ['value']
+    adx.columns = ['value']
+
+    signal = macd.copy()
+
+    signal[(macd > 0) & (di_plus > di_minus) & (adx > 20)] = 1.0
+    signal[(macd <= 0) & (di_plus <= di_minus) & (adx > 20)] = -1.0
+    signal[signal.isnull()] = 0.0
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
 
     return signal

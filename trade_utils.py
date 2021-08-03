@@ -98,3 +98,34 @@ def process_candle(df, new_row):
             telegram_bot_sendtext(message)
 
     return df
+
+def get_data(pair, interval, save=True):
+    try:
+        df = pd.read_csv('data/' + pair + '-1m-binance-all.csv')
+        df['OpenTime'] = pd.to_datetime(df['OpenTime'])
+        df.set_index('OpenTime', inplace=True)
+    except FileNotFoundError:
+        df = initialize_ohlc_df()
+
+    df = update_historical_data(df, pair, '1m')
+    
+    if save:
+        # save all data
+        filename = 'data/' + pair + '-1m-binance-all.csv'
+        df.to_csv(filename)
+
+        # create data file with data from 2020 until now for share (github)
+        df_from_2020 = df['2020-1-1':]
+        filename = 'data/' + pair + '-1m-binance.csv'
+        df_from_2020.to_csv(filename)
+    
+    # valid intervals - 1min, 3min, 5min, 15min, 30min, 1H, 2H, 4H, 6H, 8H, 12H, 1D, 3D, 1W, 1M
+    # TODO validate input
+    if interval == '1min':
+        return df
+    else:
+        summaries = {'OpenPrice': 'first', 'HighPrice': 'max', 'LowPrice': 'min', 'ClosePrice': 'last', 'Volume': 'sum'}
+        df = df.resample(interval).agg(summaries)
+        df.dropna(inplace=True)
+        
+        return df
