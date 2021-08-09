@@ -97,3 +97,13 @@ def get_pair_above_threshold(X, threshold):
     correl = correl.drop(labels=pairs_to_drop).sort_values(ascending=False)
 
     return correl[correl > threshold].index
+
+def split_sequence(sequence, n_steps):
+    X = []
+    y = []
+
+    for i in range(n_steps, len(sequence)):
+        X.append(sequence[i - n_steps:i])
+        y.append(sequence[i, -1])
+
+    return np.array(X), np.array(y)
