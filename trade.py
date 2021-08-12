@@ -14,50 +14,58 @@ interval = '1m'
 
 df = pd.DataFrame()
 
+# create instance of ThreadedWebsocketManager
+twm = get_twm()
+
 def handle_socket_message(msg):
     #print(f"message type: {msg['e']}")
     #print(msg)
 
     global df
+    if msg['e'] == 'error':
+        print(msg)
+        # close and restart the socket
+        twm.stop()
+        twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
+    else:
+        candle = msg['k']
+        timestamp = candle['t'] / 1000
+        timestamp = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
-    candle = msg['k']
-    timestamp = candle['t'] / 1000
-    timestamp = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
-
-    timestamp_close = candle['T'] / 1000
-    timestamp_close = datetime.fromtimestamp(timestamp_close).strftime('%Y-%m-%d %H:%M:%S')
-
-    if debug:
-        print(timestamp, timestamp_close, candle)
-
-    is_candle_closed = candle['x']
-
-    if is_candle_closed:
-        new_row = {
-            'OpenTime':timestamp, 
-            'OpenPrice':candle['o'], 
-            'HighPrice':candle['h'], 
-            'LowPrice':candle['l'], 
-            'ClosePrice':candle['c'], 
-            'Volume':candle['v']}
-        
-        if debug:
-            print(new_row)
-
-        if df.size == 0:
-            df = get_historical_data()
-        
-        # process data
-        df = process_candle(df, new_row)
+        timestamp_close = candle['T'] / 1000
+        timestamp_close = datetime.fromtimestamp(timestamp_close).strftime('%Y-%m-%d %H:%M:%S')
 
         if debug:
-            print(df.tail())
+            print(timestamp, timestamp_close, candle)
+
+        is_candle_closed = candle['x']
+
+        if is_candle_closed:
+            new_row = {
+                'OpenTime':timestamp, 
+                'OpenPrice':candle['o'], 
+                'HighPrice':candle['h'], 
+                'LowPrice':candle['l'], 
+                'ClosePrice':candle['c'], 
+                'Volume':candle['v']}
+            
+            if debug:
+                print(new_row)
+
+            if df.size == 0:
+                df = get_historical_data()
+            
+            # process data
+            df = process_candle(df, new_row)
+
+            if debug:
+                print(df.tail())
 
 def main(mode):
     try:
-        print('Trade started...')
-        twm = get_twm()
+        #twm = get_twm()
         twm.start()
+        print('Trade started...')
 
         twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
     
@@ -71,7 +79,7 @@ def main(mode):
                     print('Select only one character option from available list:')
                     print('\n\t h : help')
                     print('\n\t e : exit')
-                    print('\n\t p : print total stored candles')
+                    print('\n\t p : print last candles')
                 elif selection == 'e':
                     print('Exiting the program and stopping all processes.')
                     # close connection
@@ -99,7 +107,7 @@ if __name__ == "__main__":
     elif (sys.argv[1] == '1' or sys.argv[1] == '2'):
         mode = int(sys.argv[1])
     else:
-        print("Argument invalid: 1 for interactive or 2 from process!")
+        print("Argument invalid, use: 1 for interactive or 2 from process!")
         sys.exit('Finished and exiting.')
     
     main(mode)

@@ -68,13 +68,13 @@ def update_signal_by_strategy(df):
 def process_candle(df, new_row):
     df = add_row(df, new_row)
 
-    # TODO add parameter to trade in different intervals or add a list of intervals to trade
+    # TODO add parameter to trade in different intervals/strategies or add a list of intervals to trade
     # 1h trade
     if df.index.hour[-2] != df.index.hour[-1]:
         df_trade = resample_data(df, '1H')
         df_trade = update_signal_by_strategy(df_trade)
 
-        print(df_trade[['ClosePrice', 'SMA50', 'signal']].tail())
+        print(df_trade[['ClosePrice', 'SMA50', 'signal']].tail(1))
 
         if df_trade['signal'][-2] != df_trade['signal'][-1]:
             if df_trade['signal'][-1] == 1:
