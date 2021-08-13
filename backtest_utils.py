@@ -133,7 +133,9 @@ def get_sma_macd_signal(price_data, short_data, long_data, macd_data):
         if price_data.iloc[i]['value'] < short_data.iloc[i]['value'] and long:
             signal.iloc[i] = -1.0
     
-    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+    #signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+    signal[(signal != 1.0) & (signal != -1.0)] = np.nan
+    signal.fillna(method="ffill", inplace=True)
 
     return signal
 
