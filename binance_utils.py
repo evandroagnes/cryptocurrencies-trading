@@ -3,6 +3,7 @@ import yaml
 from datetime import datetime
 from binance.client import Client
 from binance import ThreadedWebsocketManager
+from binance.exceptions import BinanceAPIException, BinanceOrderException
 
 """ To read a cfg file
 import configparser
@@ -103,3 +104,35 @@ def get_crypto_data(client, pair, interval, timestamp):
     df_crypto['Volume'] = df_crypto['Volume'].astype('float')
 
     return df_crypto
+
+""" Some of the helper functions from python-binance api:
+    order_limit_buy()
+    order_limit_sell()
+    order_market_buy()
+    order_market_sell()
+    order_oco_buy()
+    order_oco_sell() """
+def create_market_order(client, symbol, side, quantity, live=False):
+    """ Create a market order in binance.
+
+    Parameters
+    - client: binance.client.Client
+    - symbol: pair to create order, example: 'BTCUSDT' or 'BTCEUR' or 'ETHBTC' ...
+    - side: must be 'BUY' or 'SELL'
+    - quantity: quantity of coins to create a order
+    - live: False (default) for test operations, True for live operations (real coins), be carefull
+
+    Return: order created
+    """    
+    if not live:
+        return client.create_test_order(symbol=symbol, side=side, type='MARKET', quantity=quantity)
+    else:
+        try:
+            return client.create_order(symbol=symbol, side=side, type='MARKET', quantity=quantity)
+        except BinanceAPIException as e:
+            # error handling
+            print(e)
+        except BinanceOrderException as e:
+            # error handling
+            print(e)
+
