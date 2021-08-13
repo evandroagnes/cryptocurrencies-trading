@@ -38,11 +38,10 @@ def get_last_timestamp_from(df):
     
     return last_timestamp_from_df * 1000
 
-def update_historical_data(df, pair, interval):
+def update_historical_data(client, df, pair, interval):
     last_timestamp_from_df = get_last_timestamp_from(df)
 
     # get timestamp of earliest date data is available
-    client = init()
     timestamp = client._get_earliest_valid_timestamp(pair, interval)
 
     if last_timestamp_from_df > timestamp:
