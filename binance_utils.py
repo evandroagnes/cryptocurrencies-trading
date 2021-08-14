@@ -124,16 +124,18 @@ def create_market_order(client, symbol, side, quantity, live=False):
     Return: order created
     """    
     if not live:
-        return client.create_test_order(symbol=symbol, side=side, type='MARKET', quantity=quantity)
+        order = client.create_test_order(symbol=symbol, side=side, type='MARKET', quantity=quantity)
     else:
         try:
-            return client.create_order(symbol=symbol, side=side, type='MARKET', quantity=quantity)
+            order = client.create_order(symbol=symbol, side=side, type='MARKET', quantity=quantity)
         except BinanceAPIException as e:
             # error handling
             print(e)
         except BinanceOrderException as e:
             # error handling
             print(e)
+    
+    return order
  
 def get_asset_balance(client, asset):
     return client.get_asset_balance(asset=asset)
