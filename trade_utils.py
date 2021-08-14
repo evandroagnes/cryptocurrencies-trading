@@ -1,5 +1,5 @@
 import pandas as pd
-from binance_utils import update_historical_data
+from binance_utils import update_historical_data, get_asset_balance, create_market_order
 from technical_indicator_utils import sma
 from message_utils import telegram_bot_sendtext
 
@@ -16,13 +16,13 @@ def initialize_ohlc_df():
 
     return df
 
-def get_historical_data(csv_file='BTCUSDT-1m-binance.csv', symbol='BTCUSDT', interval='1m'):
+def get_historical_data(client, csv_file='BTCUSDT-1m-binance.csv', symbol='BTCUSDT', interval='1m'):
     #csv_file = 'BTCUSDT-1m-binance.csv'
     df = pd.read_csv('data/' + csv_file)
     df['OpenTime'] = pd.to_datetime(df['OpenTime'])
     df.set_index('OpenTime', inplace=True)
 
-    df = update_historical_data(df, symbol, interval)
+    df = update_historical_data(client, df, symbol, interval)
     df.to_csv('data/' + csv_file)
 
     return df
@@ -65,7 +65,7 @@ def update_signal_by_strategy(df):
 
     return df
 
-def process_candle(df, new_row):
+def process_candle(client, df, new_row, base_asset, quote_asset, create_orders=False):
     df = add_row(df, new_row)
 
     # TODO add parameter to trade in different intervals/strategies or add a list of intervals to trade
@@ -76,11 +76,51 @@ def process_candle(df, new_row):
 
         print(df_trade[['ClosePrice', 'SMA50', 'signal']].tail(1))
 
+        # TODO send fee as parameter
+        fee = 0.001
+        symbol = base_asset + quote_asset
         if df_trade['signal'][-2] != df_trade['signal'][-1]:
             if df_trade['signal'][-1] == 1:
-                message = '1h Trade: Price cross above SMA 50 -> BUY!'
+                if create_orders:
+                    # TODO extract method with buy/sell rules
+                    ### BUY ORDER
+                    side = 'BUY'
+                    # Get quote_asset balance
+                    quote_balance = get_asset_balance(client, quote_asset)
+                    quote_balance = float(quote_balance['free'])
+                    quote_balance = quote_balance * (1.0 - fee)
+                    # if the quantity has more then 6 decimal numbers a filter error occurs.
+                    # See in get_symbol_info(symbol), LOT_SIZE minQty.
+                    # Subtract 0.000001 to avoid round above of the balance.
+                    quote_balance = round(float(quote_balance), 6) - 0.000001
+
+                    if quote_balance > 0:
+                        order = create_market_order(client, symbol, side, quote_balance)
+                        message = 'Buy order sent: ' + str(order)
+                    else:
+                        message = 'Unable to BUY, ' + quote_asset + ' without balance!'
+                else:
+                    message = '1h Trade: Price cross above SMA 50 -> BUY!'
             else:
-                message = '1h Trade: Price cross below SMA 50 -> SELL!'
+                if create_orders:
+                    ### SELL ORDER
+                    side = 'SELL'
+                    # get total balance asset
+                    balance = get_asset_balance(client, base_asset)
+                    balance = float(balance['free']) * (1.0 - fee)
+
+                    if balance > 0:
+                        qty = balance
+                        # if the quantity has more then 6 decimal a filter error occurs. See in get_symbol_info(symbol), LOT_SIZE minQty.
+                        # Subtract 0.000001 to avoid round above of the balance.
+                        qty = round(float(qty), 6) - 0.000001
+                        order = create_market_order(client, symbol, side, qty)
+                        message = 'Sell order sent: ' + str(order)
+                    else:
+                        message = 'Unable to SELL, ' + base_asset + ' without balance!'
+                else:
+
+                    message = '1h Trade: Price cross below SMA 50 -> SELL!'
             
             telegram_bot_sendtext(message)
 
@@ -99,7 +139,7 @@ def process_candle(df, new_row):
 
     return df
 
-def get_data(pair, interval, save=True):
+def get_data(client, pair, interval, save=True):
     try:
         df = pd.read_csv('data/' + pair + '-1m-binance-all.csv')
         df['OpenTime'] = pd.to_datetime(df['OpenTime'])
@@ -107,7 +147,7 @@ def get_data(pair, interval, save=True):
     except FileNotFoundError:
         df = initialize_ohlc_df()
 
-    df = update_historical_data(df, pair, '1m')
+    df = update_historical_data(client, df, pair, '1m')
     
     if save:
         # save all data

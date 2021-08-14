@@ -1,9 +1,10 @@
 import sys
 import pandas as pd
 from datetime import datetime
+from time import sleep
 
-from binance_utils import get_twm
-from trade_utils import get_historical_data, resample_data, process_candle
+from binance_utils import get_twm, init
+from trade_utils import get_historical_data, process_candle
 
 # Set to True to print debug messages from code
 debug = False
@@ -12,9 +13,14 @@ symbol = 'BTCUSDT'
 # valid intervals - 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
 interval = '1m'
 
+# Asset to create an order
+base_asset_order = 'BTC'
+quote_asset_order = 'EUR'
+
 df = pd.DataFrame()
 
-# create instance of ThreadedWebsocketManager
+# create binance client and a instance of ThreadedWebsocketManager
+client = init()
 twm = get_twm()
 
 def handle_socket_message(msg):
@@ -26,6 +32,7 @@ def handle_socket_message(msg):
         print(msg)
         # close and restart the socket
         twm.stop()
+        sleep(3)
         twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
     else:
         candle = msg['k']
@@ -53,17 +60,16 @@ def handle_socket_message(msg):
                 print(new_row)
 
             if df.size == 0:
-                df = get_historical_data()
+                df = get_historical_data(client)
             
             # process data
-            df = process_candle(df, new_row)
+            df = process_candle(client, df, new_row, base_asset_order, quote_asset_order)
 
             if debug:
                 print(df.tail())
 
 def main(mode):
     try:
-        #twm = get_twm()
         twm.start()
         print('Trade started...')
 
@@ -71,7 +77,7 @@ def main(mode):
     
         while 1:
             if mode == 1:
-                selection = input('Your selection? (h for help) ')    #python 3.x, for 2.x use raw_input
+                selection = input('Your selection? (h for help) ')
                 
                 if len(selection) > 1:
                     print('Enter one character only.')
