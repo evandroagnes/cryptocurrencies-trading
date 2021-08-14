@@ -97,6 +97,7 @@ def process_candle(client, df, new_row, base_asset, quote_asset, create_orders=F
                     if quote_balance > 0:
                         order = create_market_order(client, symbol, side, quote_balance)
                         message = 'Buy order sent: ' + str(order)
+                        print(message)
                     else:
                         message = 'Unable to BUY, ' + quote_asset + ' without balance!'
                 else:
@@ -116,6 +117,7 @@ def process_candle(client, df, new_row, base_asset, quote_asset, create_orders=F
                         qty = round(float(qty), 6) - 0.000001
                         order = create_market_order(client, symbol, side, qty)
                         message = 'Sell order sent: ' + str(order)
+                        print(message)
                     else:
                         message = 'Unable to SELL, ' + base_asset + ' without balance!'
                 else:
