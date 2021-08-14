@@ -15,19 +15,31 @@ actual_api_key = config.get('BINANCE', 'ACTUAL_API_KEY')
 actual_secret_key = config.get('BINANCE', 'ACTUAL_SECRET_KEY')
  """
 
-def get_credentials():
+def get_credentials(test=False):
     with open("config.yml", 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)
-
-    api_key = cfg['api_creds']['binance1_access_code']
-    api_secret = cfg['api_creds']['binance1_secret_code']
     
-    return api_key,api_secret
+    if test:
+        api_key = cfg['api_test_creds']['binance_test_access_code']
+        api_secret = cfg['api_test_creds']['binance_test_secret_code']
+    else:
+        api_key = cfg['api_creds']['binance1_access_code']
+        api_secret = cfg['api_creds']['binance1_secret_code']
+    
+    return api_key, api_secret
 
 def init():
     api_key, api_secret = get_credentials()
 
     return Client(api_key, api_secret)
+
+def init_test():
+    api_key, api_secret = get_credentials(test=True)
+
+    client = Client(api_key, api_secret)
+    client.API_URL = 'https://testnet.binance.vision/api'
+
+    return client
 
 def get_last_timestamp_from(df):
     if df.size > 0:
