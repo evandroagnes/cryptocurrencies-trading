@@ -1,6 +1,25 @@
+params:
+    # Mode: 1 - interactive, 2 - process
+    mode: 1
+    # Trade Parameters
+    symbol: 'BTCUSDT'
+    # valid intervals - 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
+    interval: '1m'
+    # Base/quote asset to create orders
+    base_asset_order: 'BTC'
+    quote_asset_order: 'USDT'
+    # live or test trade: 0 - False, 1 - True
+    live_trade: 0
+    create_orders: 0
+    # End trade parameters
+
 api_creds:
     binance1_access_code: <your access code>
     binance1_secret_code: <your secret code>
+
+api_test_creds:
+    binance_test_access_code: <your test access code>
+    binance_test_secret_code: <your test secret code>
 
 telegram:
     bot_token: <your token>

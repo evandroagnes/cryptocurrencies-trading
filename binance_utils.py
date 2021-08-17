@@ -4,6 +4,7 @@ from datetime import datetime
 from binance.client import Client
 from binance import ThreadedWebsocketManager
 from binance.exceptions import BinanceAPIException, BinanceOrderException
+from binance.helpers import round_step_size
 
 """ To read a cfg file
 import configparser
@@ -150,5 +151,38 @@ def create_market_order(client, symbol, side, quantity, live=False):
     return order
  
 def get_asset_balance(client, asset):
-    return client.get_asset_balance(asset=asset)
+    balance = client.get_asset_balance(asset=asset)
+    
+    if balance is None:
+        return float(0.0), float(0.0)
 
+    return float(balance['free']), float(balance['locked'])
+
+def get_trade_info(client, symbol):
+    info = client.get_symbol_info(symbol)
+
+    base_asset_precision = info['baseAssetPrecision']
+    quote_asset_precision = info['quoteAssetPrecision']
+
+    # filters
+    for filter in info['filters']:
+        if filter['filterType'] == 'PRICE_FILTER':
+            min_price = filter['minPrice']
+            max_price = filter['maxPrice']
+        elif filter['filterType'] == 'LOT_SIZE':
+            base_asset_min_qty = filter['minQty']
+            base_asset_max_qty = filter['maxQty']
+        elif filter['filterType'] == 'MIN_NOTIONAL':
+            quote_asset_min_value = filter['minNotional']
+
+    return {'base_asset_precision': base_asset_precision, 
+            'quote_asset_precision': quote_asset_precision,
+            'min_price': min_price,
+            'max_price': max_price,
+            'base_asset_min_qty': base_asset_min_qty,
+            'base_asset_max_qty': base_asset_max_qty,
+            'quote_asset_min_value': quote_asset_min_value,
+            'exchange_fee': 0.001}
+
+def get_round_value(value, precision):
+    return round_step_size(value, precision)

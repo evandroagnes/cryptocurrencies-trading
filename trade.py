@@ -1,27 +1,44 @@
 import sys
 import pandas as pd
+import yaml
 from datetime import datetime
 from time import sleep
 
-from binance_utils import get_twm, init
+from binance_utils import get_twm, init, init_test, get_trade_info
 from trade_utils import get_historical_data, process_candle
 
 # Set to True to print debug messages from code
 debug = False
 
-symbol = 'BTCUSDT'
-# valid intervals - 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
-interval = '1m'
+# Trade Parameters
+with open("config.yml", 'r') as ymlfile:
+    cfg = yaml.safe_load(ymlfile)
 
-# Asset to create an order
-base_asset_order = 'BTC'
-quote_asset_order = 'EUR'
-
-df = pd.DataFrame()
+mode = cfg['params']['mode']
+symbol = cfg['params']['symbol']
+interval = cfg['params']['interval']
+base_asset_order = cfg['params']['base_asset_order']
+quote_asset_order = cfg['params']['quote_asset_order']
+live_trade = bool(cfg['params']['live_trade'])
+create_orders = bool(cfg['params']['create_orders'])
+# End trade parameters
 
 # create binance client and a instance of ThreadedWebsocketManager
-client = init()
+if live_trade:
+    client = init()
+    print('LIVE TRADE!!!')
+else:
+    client = init_test()
+    base_asset_order = 'BTC'
+    quote_asset_order = 'USDT'
+
+    print('Test Trade...')
+
+symbol_trade = base_asset_order + quote_asset_order
+trade_info_dict = get_trade_info(client, symbol_trade)
+
 twm = get_twm()
+df = pd.DataFrame()
 
 def handle_socket_message(msg):
     #print(f"message type: {msg['e']}")
@@ -63,7 +80,7 @@ def handle_socket_message(msg):
                 df = get_historical_data(client)
             
             # process data
-            df = process_candle(client, df, new_row, base_asset_order, quote_asset_order)
+            df = process_candle(client, df, new_row, base_asset_order, quote_asset_order, trade_info_dict, create_orders)
 
             if debug:
                 print(df.tail())
@@ -102,18 +119,5 @@ def main(mode):
         twm.stop()
         sys.exit('Finished and exiting.')
 
-if __name__ == "__main__":
-    n = len(sys.argv)
-    mode = 0
-    if n > 2:
-        print("You must inform zero or one argument: 1 for interactive or 2 from process!")
-        sys.exit('Finished and exiting.')
-    elif n == 1:
-        mode = 1
-    elif (sys.argv[1] == '1' or sys.argv[1] == '2'):
-        mode = int(sys.argv[1])
-    else:
-        print("Argument invalid, use: 1 for interactive or 2 from process!")
-        sys.exit('Finished and exiting.')
-    
+if __name__ == "__main__":   
     main(mode)

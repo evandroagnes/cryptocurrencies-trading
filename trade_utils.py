@@ -1,5 +1,5 @@
 import pandas as pd
-from binance_utils import update_historical_data, get_asset_balance, create_market_order
+from binance_utils import update_historical_data, get_asset_balance, create_market_order, get_round_value
 from technical_indicator_utils import sma
 from message_utils import telegram_bot_sendtext
 
@@ -65,8 +65,10 @@ def update_signal_by_strategy(df):
 
     return df
 
-def process_candle(client, df, new_row, base_asset, quote_asset, create_orders=False):
+def process_candle(client, df, new_row, base_asset, quote_asset, trade_info_dict, create_orders=False):
     df = add_row(df, new_row)
+    symbol = base_asset + quote_asset
+    fee = trade_info_dict['exchange_fee']
 
     # TODO add parameter to trade in different intervals/strategies or add a list of intervals to trade
     # 1h trade
@@ -76,9 +78,6 @@ def process_candle(client, df, new_row, base_asset, quote_asset, create_orders=F
 
         print(df_trade[['ClosePrice', 'SMA50', 'signal']].tail(1))
 
-        # TODO send fee as parameter
-        fee = 0.001
-        symbol = base_asset + quote_asset
         if df_trade['signal'][-2] != df_trade['signal'][-1]:
             if df_trade['signal'][-1] == 1:
                 if create_orders:
@@ -86,20 +85,16 @@ def process_candle(client, df, new_row, base_asset, quote_asset, create_orders=F
                     ### BUY ORDER
                     side = 'BUY'
                     # Get quote_asset balance
-                    quote_balance = get_asset_balance(client, quote_asset)
-                    quote_balance = float(quote_balance['free'])
+                    quote_balance, quote_balance_locked = get_asset_balance(client, quote_asset)
                     quote_balance = quote_balance * (1.0 - fee)
-                    # if the quantity has more then 6 decimal numbers a filter error occurs.
-                    # See in get_symbol_info(symbol), LOT_SIZE minQty.
-                    # Subtract 0.000001 to avoid round above of the balance.
-                    quote_balance = round(float(quote_balance), 6) - 0.000001
+                    quote_balance = get_round_value(quote_balance, trade_info_dict['min_price'])
 
-                    if quote_balance > 0:
-                        order = create_market_order(client, symbol, side, quote_balance)
+                    if quote_balance > trade_info_dict['quote_asset_min_value']:
+                        order = create_market_order(client, symbol, side, quote_balance, live=True)
                         message = 'Buy order sent: ' + str(order)
                         print(message)
                     else:
-                        message = 'Unable to BUY, ' + quote_asset + ' without balance!'
+                        message = 'Unable to BUY, ' + quote_asset + ' without balance: ' + str(quote_balance)
                 else:
                     message = '1h Trade: Price cross above SMA 50 -> BUY!'
             else:
@@ -107,21 +102,18 @@ def process_candle(client, df, new_row, base_asset, quote_asset, create_orders=F
                     ### SELL ORDER
                     side = 'SELL'
                     # get total balance asset
-                    balance = get_asset_balance(client, base_asset)
-                    balance = float(balance['free']) * (1.0 - fee)
+                    balance, balance_locked = get_asset_balance(client, base_asset)
+                    balance = balance * (1.0 - fee)
 
                     if balance > 0:
                         qty = balance
-                        # if the quantity has more then 6 decimal a filter error occurs. See in get_symbol_info(symbol), LOT_SIZE minQty.
-                        # Subtract 0.000001 to avoid round above of the balance.
-                        qty = round(float(qty), 6) - 0.000001
-                        order = create_market_order(client, symbol, side, qty)
+                        qty = get_round_value(qty, trade_info_dict['base_asset_min_qty'])
+                        order = create_market_order(client, symbol, side, qty, live=True)
                         message = 'Sell order sent: ' + str(order)
                         print(message)
                     else:
-                        message = 'Unable to SELL, ' + base_asset + ' without balance!'
+                        message = 'Unable to SELL, ' + base_asset + ' without balance: ' + str(balance)
                 else:
-
                     message = '1h Trade: Price cross below SMA 50 -> SELL!'
             
             telegram_bot_sendtext(message)
