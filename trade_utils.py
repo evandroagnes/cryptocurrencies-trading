@@ -85,12 +85,11 @@ def process_candle(client, df, new_row, base_asset, quote_asset, trade_info_dict
                     ### BUY ORDER
                     side = 'BUY'
                     # Get quote_asset balance
-                    quote_balance, quote_balance_locked = get_asset_balance(client, quote_asset)
-                    quote_balance = quote_balance * (1.0 - fee)
-                    quote_balance = get_round_value(quote_balance, trade_info_dict['min_price'])
+                    quote_balance, _ = get_asset_balance(client, quote_asset)
+                    quote_balance = get_round_value(quote_balance, float(trade_info_dict['min_price']))
 
-                    if quote_balance > trade_info_dict['quote_asset_min_value']:
-                        order = create_market_order(client, symbol, side, quote_balance, live=True)
+                    if quote_balance > float(trade_info_dict['quote_asset_min_value']):
+                        order = create_market_order(client, symbol, side, quote_balance)
                         message = 'Buy order sent: ' + str(order)
                         print(message)
                     else:
@@ -103,12 +102,11 @@ def process_candle(client, df, new_row, base_asset, quote_asset, trade_info_dict
                     side = 'SELL'
                     # get total balance asset
                     balance, balance_locked = get_asset_balance(client, base_asset)
-                    balance = balance * (1.0 - fee)
+                    #balance = balance * (1.0 - fee)
+                    qty = get_round_value(balance, float(trade_info_dict['base_asset_min_qty']))
 
                     if balance > 0:
-                        qty = balance
-                        qty = get_round_value(qty, trade_info_dict['base_asset_min_qty'])
-                        order = create_market_order(client, symbol, side, qty, live=True)
+                        order = create_market_order(client, symbol, side, qty)
                         message = 'Sell order sent: ' + str(order)
                         print(message)
                     else:

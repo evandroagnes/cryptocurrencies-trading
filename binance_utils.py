@@ -124,29 +124,43 @@ def get_crypto_data(client, pair, interval, timestamp):
     order_market_sell()
     order_oco_buy()
     order_oco_sell() """
-def create_market_order(client, symbol, side, quantity, live=False):
+def create_market_order(client, symbol, side, quantity):
     """ Create a market order in binance.
 
     Parameters
     - client: binance.client.Client
     - symbol: pair to create order, example: 'BTCUSDT' or 'BTCEUR' or 'ETHBTC' ...
     - side: must be 'BUY' or 'SELL'
-    - quantity: quantity of coins to create a order
+    - quantity: quantity to create a order.
+                - to BUY: quantity of quote_asset;
+                - to SELL: quantity of base_asset. 
     - live: False (default) for test operations, True for live operations (real coins), be carefull
 
     Return: order created
-    """    
-    if not live:
-        order = client.create_test_order(symbol=symbol, side=side, type='MARKET', quantity=quantity)
-    else:
+    """
+    order = {}
+    
+    if side == 'BUY':
         try:
-            order = client.create_order(symbol=symbol, side=side, type='MARKET', quantity=quantity)
+            order = client.order_market_buy(symbol=symbol, quoteOrderQty=quantity)
         except BinanceAPIException as e:
             # error handling
             print(e)
         except BinanceOrderException as e:
             # error handling
             print(e)
+    elif side == 'SELL':
+        try:
+            order = client.order_market_sell(symbol=symbol, quantity=quantity)
+        except BinanceAPIException as e:
+            # error handling
+            print(e)
+        except BinanceOrderException as e:
+            # error handling
+            print(e)
+    else:
+        # TODO handle wrong side
+        print('Wrong side, must be \'BUY\' or \'SELL\'! ' + side)
     
     return order
  
