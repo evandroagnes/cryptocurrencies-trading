@@ -5,7 +5,7 @@ from datetime import datetime
 from time import sleep
 
 from binance_utils import get_twm, init, init_test, get_trade_info
-from trade_utils import get_historical_data, process_candle
+from trade_utils import get_data, process_candle
 
 # Set to True to print debug messages from code
 debug = False
@@ -77,7 +77,7 @@ def handle_socket_message(msg):
                 print(new_row)
 
             if df.size == 0:
-                df = get_historical_data(client)
+                df = get_data(client, symbol, interval, save=False)
             
             # process data
             df = process_candle(client, df, new_row, base_asset_order, quote_asset_order, trade_info_dict, create_orders)

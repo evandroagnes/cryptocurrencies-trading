@@ -16,17 +16,6 @@ def initialize_ohlc_df():
 
     return df
 
-def get_historical_data(client, csv_file='BTCUSDT-1m-binance.csv', symbol='BTCUSDT', interval='1m'):
-    #csv_file = 'BTCUSDT-1m-binance.csv'
-    df = pd.read_csv('data/' + csv_file)
-    df['OpenTime'] = pd.to_datetime(df['OpenTime'])
-    df.set_index('OpenTime', inplace=True)
-
-    df = update_historical_data(client, df, symbol, interval)
-    df.to_csv('data/' + csv_file)
-
-    return df
-
 def add_row(df, row):
     df.loc[pd.to_datetime(row['OpenTime'])] = [pd.to_numeric(row['OpenPrice']),
         pd.to_numeric(row['HighPrice']),
@@ -137,7 +126,12 @@ def get_data(client, pair, interval, save=True):
         df['OpenTime'] = pd.to_datetime(df['OpenTime'])
         df.set_index('OpenTime', inplace=True)
     except FileNotFoundError:
-        df = initialize_ohlc_df()
+        try:
+            df = pd.read_csv('data/' + pair + '-1m-binance.csv')
+            df['OpenTime'] = pd.to_datetime(df['OpenTime'])
+            df.set_index('OpenTime', inplace=True)
+        except FileNotFoundError:
+            df = initialize_ohlc_df()
 
     df = update_historical_data(client, df, pair, '1m')
     
@@ -153,7 +147,7 @@ def get_data(client, pair, interval, save=True):
     
     # valid intervals - 1min, 3min, 5min, 15min, 30min, 1H, 2H, 4H, 6H, 8H, 12H, 1D, 3D, 1W, 1M
     # TODO validate input
-    if interval == '1min':
+    if interval == '1min' or interval == '1m':
         return df
     else:
         summaries = {'OpenPrice': 'first', 'HighPrice': 'max', 'LowPrice': 'min', 'ClosePrice': 'last', 'Volume': 'sum'}
