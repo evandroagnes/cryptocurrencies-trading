@@ -139,7 +139,7 @@ def create_market_order(client, symbol, side, quantity):
     Return: order created
     """
     order = {}
-    
+
     if side == 'BUY':
         try:
             order = client.order_market_buy(symbol=symbol, quoteOrderQty=quantity)
@@ -200,3 +200,8 @@ def get_trade_info(client, symbol):
 
 def get_round_value(value, precision):
     return round_step_size(value, precision)
+
+def get_lastest_price(client, symbol):
+    btc_price = client.get_symbol_ticker(symbol=symbol)
+    
+    return float(btc_price['price'])
