@@ -150,8 +150,5 @@ def get_data(client, pair, interval, save=True):
     if interval == '1min' or interval == '1m':
         return df
     else:
-        summaries = {'OpenPrice': 'first', 'HighPrice': 'max', 'LowPrice': 'min', 'ClosePrice': 'last', 'Volume': 'sum'}
-        df = df.resample(interval).agg(summaries)
-        df.dropna(inplace=True)
-        
+        df = resample_data(df, interval)
         return df
