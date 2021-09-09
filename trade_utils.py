@@ -59,64 +59,55 @@ def process_candle(client, df, new_row, base_asset, quote_asset, trade_info_dict
     symbol = base_asset + quote_asset
     fee = trade_info_dict['exchange_fee']
 
-    # TODO add parameter to trade in different intervals/strategies or add a list of intervals to trade
-    # 1h trade
-    if df.index.hour[-2] != df.index.hour[-1]:
-        df_trade = resample_data(df, '1H')
-        df_trade = update_signal_by_strategy(df_trade)
+    # Read every call because the strategy can be changed in the file.
+    df_strategies = pd.read_csv('data/trade-strategies.csv')
 
-        print(df_trade[['ClosePrice', 'SMA50', 'signal']].tail(1))
+    for index, strategy in df_strategies.iterrows():
+        interval = strategy['Interval']
+        message_strategy = strategy['Message']
+        create_orders = bool(strategy['CreateOrders'])
 
-        if df_trade['signal'][-2] != df_trade['signal'][-1]:
-            if df_trade['signal'][-1] == 1:
-                if create_orders:
-                    # TODO extract method with buy/sell rules
-                    ### BUY ORDER
+        if is_candle_closed(df, interval):
+            df_trade = resample_data(df, interval)
+            df_trade = update_signal_by_strategy(df_trade)
+
+            if df_trade['signal'][-2] != df_trade['signal'][-1]:
+                if df_trade['signal'][-1] == 1:
                     side = 'BUY'
-                    # Get quote_asset balance
-                    quote_balance, _ = get_asset_balance(client, quote_asset)
-                    quote_balance = get_round_value(quote_balance, float(trade_info_dict['min_price']))
+                    if create_orders:
+                        # TODO extract method with buy/sell rules
+                        ### BUY ORDER
+                        # Get quote_asset balance
+                        quote_balance, _ = get_asset_balance(client, quote_asset)
+                        quote_balance = get_round_value(quote_balance, float(trade_info_dict['min_price']))
 
-                    if quote_balance > float(trade_info_dict['quote_asset_min_value']):
-                        order = create_market_order(client, symbol, side, quote_balance)
-                        message = 'Buy order sent: ' + str(order)
-                        print(message)
+                        if quote_balance > float(trade_info_dict['quote_asset_min_value']):
+                            order = create_market_order(client, symbol, side, quote_balance)
+                            message = 'Buy order sent: ' + str(order)
+                            print(message)
+                        else:
+                            message = 'Unable to BUY, ' + quote_asset + ' without balance: ' + str(quote_balance)
                     else:
-                        message = 'Unable to BUY, ' + quote_asset + ' without balance: ' + str(quote_balance)
+                        message = side + ' (' + interval + ' Trade): ' + message_strategy + '!'
                 else:
-                    message = '1h Trade: Price cross above SMA 50 -> BUY!'
-            else:
-                if create_orders:
-                    ### SELL ORDER
                     side = 'SELL'
-                    # get total balance asset
-                    balance, balance_locked = get_asset_balance(client, base_asset)
-                    #balance = balance * (1.0 - fee)
-                    qty = get_round_value(balance, float(trade_info_dict['base_asset_min_qty']))
+                    if create_orders:
+                        ### SELL ORDER
+                        # get total balance asset
+                        balance, balance_locked = get_asset_balance(client, base_asset)
+                        #balance = balance * (1.0 - fee)
+                        qty = get_round_value(balance, float(trade_info_dict['base_asset_min_qty']))
 
-                    if balance > 0:
-                        order = create_market_order(client, symbol, side, qty)
-                        message = 'Sell order sent: ' + str(order)
-                        print(message)
+                        if balance > 0:
+                            order = create_market_order(client, symbol, side, qty)
+                            message = 'Sell order sent: ' + str(order)
+                            print(message)
+                        else:
+                            message = 'Unable to SELL, ' + base_asset + ' without balance: ' + str(balance)
                     else:
-                        message = 'Unable to SELL, ' + base_asset + ' without balance: ' + str(balance)
-                else:
-                    message = '1h Trade: Price cross below SMA 50 -> SELL!'
-            
-            telegram_bot_sendtext(message)
-
-    # 1D trade
-    if df.index.day[-2] != df.index.day[-1]:
-        df_trade = resample_data(df, '1D')
-        df_trade = update_signal_by_strategy(df_trade)
-
-        if df_trade['signal'][-2] != df_trade['signal'][-1]:
-            if df_trade['signal'][-1] == 1:
-                message = '1D Trade: Price cross above SMA 50 -> BUY!!!'
-            else:
-                message = '1D Trade: Price cross below SMA 50 -> SELL!!!'
-            
-            telegram_bot_sendtext(message)
+                        message = side + ' (' + interval + ' Trade): ' + message_strategy + '!'
+                
+                telegram_bot_sendtext(message)
 
     return df
 
@@ -152,3 +143,56 @@ def get_data(client, pair, interval, save=True):
     else:
         df = resample_data(df, interval)
         return df
+
+def is_candle_closed(df, interval):
+    # valid strategy intervals - 1min, 3min, 5min, 15min, 30min, 1H, 2H, 4H, 6H, 8H, 12H, 1D, 3D, 1W, 1M
+    if interval == '1min':
+        return True
+    elif interval == '3min':
+        if df.index.minute[-1] % 3 == 0:
+            return True
+    elif interval == '5min':
+        if df.index.minute[-1] % 5 == 0:
+            return True
+    elif interval == '15min':
+        if df.index.minute[-1] % 15 == 0:
+            return True
+    elif interval == '30min':
+        if df.index.minute[-1] % 30 == 0:
+            return True
+    elif interval == '1H':
+        if df.index.hour[-2] != df.index.hour[-1]:
+            return True
+    elif interval == '2H':
+        if (df.index.hour[-2] != df.index.hour[-1]) and (df.index.hour[-2] % 2 == 0):
+            return True
+    elif interval == '4H':
+        if (df.index.hour[-2] != df.index.hour[-1]) and (df.index.hour[-2] % 4 == 0):
+            return True
+    elif interval == '6H':
+        if (df.index.hour[-2] != df.index.hour[-1]) and (df.index.hour[-2] % 6 == 0):
+            return True
+    elif interval == '8H':
+        if (df.index.hour[-2] != df.index.hour[-1]) and (df.index.hour[-2] % 8 == 0):
+            return True
+    elif interval == '12H':
+        if (df.index.hour[-2] != df.index.hour[-1]) and (df.index.hour[-2] % 12 == 0):
+            return True
+    elif interval == '1D':
+        if df.index.day[-2] != df.index.day[-1]:
+            return True
+    elif interval == '3D':
+        delta = df.index[-1] - df.index[0]
+        # delta.days -1 because the last day is incomplete
+        if (delta.days - 1) % 3 == 0:
+            return True
+    elif interval == '1W':
+        delta = df.index[-1] - df.index[0]
+        # delta.days -1 because the last day is incomplete
+        if (delta.days - 1) % 7 == 0:
+            return True
+    elif interval == '1M':
+        if df.index.month[-2] != df.index.month[-1]:
+            return True
+    
+    return False

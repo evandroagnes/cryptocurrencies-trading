@@ -1,0 +1,3 @@
+Interval,SignalColumnName,CreateOrders,Message
+1H,Signal50SMAStrategy,0,The price crossed 50 SMA line
+1D,Signal50SMAStrategy,0,The price crossed 50 SMA line
