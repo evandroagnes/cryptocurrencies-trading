@@ -1,7 +1,8 @@
 import pandas as pd
-from binance_utils import update_historical_data, get_asset_balance, create_market_order, get_round_value
-from technical_indicator_utils import sma
+from binance_utils import update_historical_data, get_asset_balance, create_market_order, get_round_value, get_trade_info
+from technical_indicator_utils import sma, macd
 from message_utils import telegram_bot_sendtext
+from strategy_utils import get_cross_signal, get_macd_signal
 
 def initialize_ohlc_df():
     df = pd.DataFrame(columns=[
@@ -38,74 +39,80 @@ def resample_data(df, time_resample):
 
 def generate_technical_indicators(df):
     df['SMA50'] = sma(df['ClosePrice'], 50)
+    df['SMA100'] = sma(df['ClosePrice'], 100)
+    df['MACD'], df['MACDSignal'], df['MACDHist'] = macd(df.ClosePrice)
 
     return df
 
 def update_signal_by_strategy(df):
     df = generate_technical_indicators(df)
 
-    signal = df[['ClosePrice']].copy()
-    signal[df['ClosePrice'] > df['SMA50']] = 1.0
-    signal[df['ClosePrice'] <= df['SMA50']] = -1.0
-    #TODO update NaN and 0 to last signal 1 or -1
-    #signal[signal.isnull()] = 0.0
-
-    df['signal'] = signal
+    df['Signal50SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA50']].copy())
+    df['SignalMACDStrategy'] = get_macd_signal(df[['MACDSignal']].copy(), df[['MACD']].copy())
 
     return df
 
-def process_candle(client, df, new_row, base_asset, quote_asset, trade_info_dict, create_orders=False):
+def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
     df = add_row(df, new_row)
-    symbol = base_asset + quote_asset
-    fee = trade_info_dict['exchange_fee']
+    symbol_order = base_asset + quote_asset
 
     # Read every call because the strategy can be changed in the file.
     df_strategies = pd.read_csv('data/trade-strategies.csv')
+    df_strategies = df_strategies[df_strategies['Symbol'] == symbol]
 
     for index, strategy in df_strategies.iterrows():
         interval = strategy['Interval']
         message_strategy = strategy['Message']
+        signal_column = strategy['SignalColumnName']
         create_orders = bool(strategy['CreateOrders'])
+        buy_amount = float(strategy['BuyAmount'])
+        sell_amount = float(strategy['SellAmount'])
 
         if is_candle_closed(df, interval):
             df_trade = resample_data(df, interval)
             df_trade = update_signal_by_strategy(df_trade)
 
-            if df_trade['signal'][-2] != df_trade['signal'][-1]:
-                if df_trade['signal'][-1] == 1:
+            if df_trade[signal_column][-2] != df_trade[signal_column][-1]:
+                # get info about create orders (minimum, maximum, ...)
+                trade_info_dict = get_trade_info(client, symbol_order)
+                fee = trade_info_dict['exchange_fee']
+
+                if df_trade[signal_column][-1] == 1:
                     side = 'BUY'
                     if create_orders:
                         # TODO extract method with buy/sell rules
                         ### BUY ORDER
                         # Get quote_asset balance
                         quote_balance, _ = get_asset_balance(client, quote_asset)
+                        quote_balance = quote_balance * buy_amount
                         quote_balance = get_round_value(quote_balance, float(trade_info_dict['min_price']))
 
                         if quote_balance > float(trade_info_dict['quote_asset_min_value']):
-                            order = create_market_order(client, symbol, side, quote_balance)
+                            order = create_market_order(client, symbol_order, side, quote_balance)
                             message = 'Buy order sent: ' + str(order)
                             print(message)
                         else:
                             message = 'Unable to BUY, ' + quote_asset + ' without balance: ' + str(quote_balance)
                     else:
-                        message = side + ' (' + interval + ' Trade): ' + message_strategy + '!'
+                        message = side + ' ' + symbol + ' (' + interval + ' Trade): ' + message_strategy + '!'
                 else:
                     side = 'SELL'
                     if create_orders:
                         ### SELL ORDER
                         # get total balance asset
-                        balance, balance_locked = get_asset_balance(client, base_asset)
+                        balance, _ = get_asset_balance(client, base_asset)
                         #balance = balance * (1.0 - fee)
+                        balance = balance * sell_amount
                         qty = get_round_value(balance, float(trade_info_dict['base_asset_min_qty']))
 
                         if balance > 0:
-                            order = create_market_order(client, symbol, side, qty)
+                            order = create_market_order(client, symbol_order, side, qty)
                             message = 'Sell order sent: ' + str(order)
                             print(message)
                         else:
                             message = 'Unable to SELL, ' + base_asset + ' without balance: ' + str(balance)
                     else:
-                        message = side + ' (' + interval + ' Trade): ' + message_strategy + '!'
+                        message = side + ' ' + symbol + ' (' + interval + ' Trade): ' + message_strategy + '!'
                 
                 telegram_bot_sendtext(message)
 

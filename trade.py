@@ -4,7 +4,7 @@ import yaml
 from datetime import datetime
 from time import sleep
 
-from binance_utils import get_twm, init, init_test, get_trade_info
+from binance_utils import get_twm, init, init_test
 from trade_utils import get_data, process_candle
 
 # Set to True to print debug messages from code
@@ -15,13 +15,19 @@ with open("config.yml", 'r') as ymlfile:
     cfg = yaml.safe_load(ymlfile)
 
 mode = cfg['params']['mode']
-symbol = cfg['params']['symbol']
+symbol_list = cfg['params']['symbol']
+base_asset_order_list = cfg['params']['base_asset_order']
+quote_asset_order_list = cfg['params']['quote_asset_order']
 interval = cfg['params']['interval']
-base_asset_order = cfg['params']['base_asset_order']
-quote_asset_order = cfg['params']['quote_asset_order']
 live_trade = bool(cfg['params']['live_trade'])
-create_orders = bool(cfg['params']['create_orders'])
 # End trade parameters
+
+# create a dictionary with the symbol and it respective order asset
+base_asset_order_dic = {}
+quote_asset_order_dic = {}
+for i in range(len(symbol_list)):
+    base_asset_order_dic[symbol_list[i]] = base_asset_order_list[i]
+    quote_asset_order_dic[symbol_list[i]] = quote_asset_order_list[i]
 
 # create binance client and a instance of ThreadedWebsocketManager
 if live_trade:
@@ -34,24 +40,26 @@ else:
 
     print('Test Trade...')
 
-symbol_trade = base_asset_order + quote_asset_order
-trade_info_dict = get_trade_info(client, symbol_trade)
-
 twm = get_twm()
-df = pd.DataFrame()
+symbol_data = {}
 
 def handle_socket_message(msg):
     #print(f"message type: {msg['e']}")
     #print(msg)
 
-    global df
+    global symbol_data
+    symbol = msg['s']
+
     if msg['e'] == 'error':
         print(msg)
         # close and restart the socket
         twm.stop()
         sleep(3)
-        twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
+
+        for symbol in symbol_list:
+            twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
     else:
+        #symbol = msg['s']
         candle = msg['k']
         timestamp = candle['t'] / 1000
         timestamp = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
@@ -75,22 +83,28 @@ def handle_socket_message(msg):
             
             if debug:
                 print(new_row)
-
-            if df.size == 0:
-                df = get_data(client, symbol, interval, save=False)
+            
+            if symbol not in symbol_data:
+                symbol_data[symbol] = get_data(client, symbol, interval, save=False)
             
             # process data
-            df = process_candle(client, df, new_row, base_asset_order, quote_asset_order, trade_info_dict, create_orders)
+            symbol_data[symbol] = process_candle(client,
+                    symbol,
+                    symbol_data[symbol], 
+                    new_row, 
+                    base_asset_order_dic[symbol], 
+                    quote_asset_order_dic[symbol])
 
             if debug:
-                print(df.tail())
+                print(symbol_data[symbol].tail())
 
 def main(mode):
     try:
         twm.start()
         print('Trade started...')
 
-        twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
+        for symbol in symbol_list:
+            twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
     
         while 1:
             if mode == 1:
@@ -109,11 +123,14 @@ def main(mode):
                     twm.stop()
                     sys.exit('Finished and exiting.')
                 elif selection == 'p':
-                    print(df.tail())
+                    for key in symbol_data:
+                        print(symbol_data[key].tail())
                 else:
                     print('Unknown option.')
     except KeyboardInterrupt:
-        print(df.tail())
+        for key in symbol_data:
+            print(symbol_data[key].tail())
+        
         print('Exiting the program and stopping all processes.')
         # close connection
         twm.stop()

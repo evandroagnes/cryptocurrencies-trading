@@ -1,3 +1,4 @@
-Interval,SignalColumnName,CreateOrders,Message
-1H,Signal50SMAStrategy,0,The price crossed 50 SMA line
-1D,Signal50SMAStrategy,0,The price crossed 50 SMA line
+Symbol,Interval,SignalColumnName,CreateOrders,BuyAmount,SellAmount,Message
+BTCUSDT,1H,Signal50SMAStrategy,0,1.0,1.0,The price crossed 50 SMA line
+BTCUSDT,1D,Signal50SMAStrategy,0,1.0,1.0,The price crossed 50 SMA line
+BTCUSDT,1H,SignalMACDStrategy,0,1.0,1.0,MACD Signal crossed
