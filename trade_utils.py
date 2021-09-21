@@ -86,6 +86,7 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
                         quote_balance, _ = get_asset_balance(client, quote_asset)
                         quote_balance = quote_balance * buy_amount
                         quote_balance = get_round_value(quote_balance, float(trade_info_dict['min_price']))
+                        print(symbol_order + ' quantity to buy: ' + str(quote_balance))
 
                         if quote_balance > float(trade_info_dict['quote_asset_min_value']):
                             order = create_market_order(client, symbol_order, side, quote_balance)
@@ -102,10 +103,13 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
                         # get total balance asset
                         balance, _ = get_asset_balance(client, base_asset)
                         #balance = balance * (1.0 - fee)
-                        balance = balance * sell_amount
-                        qty = get_round_value(balance, float(trade_info_dict['base_asset_min_qty']))
+                        qty = balance * sell_amount
+                        qty = get_round_value(qty, float(trade_info_dict['min_price']))
+                        if qty > balance:
+                            qty = qty - float(trade_info_dict['min_price'])
+                        print(symbol_order + ' quantity to sell: ' + str(qty))
 
-                        if balance > 0:
+                        if qty > float(trade_info_dict['base_asset_min_qty']):
                             order = create_market_order(client, symbol_order, side, qty)
                             message = 'Sell order sent: ' + str(order)
                             print(message)
