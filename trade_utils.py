@@ -104,9 +104,9 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
                         balance, _ = get_asset_balance(client, base_asset)
                         #balance = balance * (1.0 - fee)
                         qty = balance * sell_amount
-                        qty = get_round_value(qty, float(trade_info_dict['min_price']))
+                        qty = get_round_value(qty, float(trade_info_dict['base_asset_min_qty']))
                         if qty > balance:
-                            qty = qty - float(trade_info_dict['min_price'])
+                            qty = qty - float(trade_info_dict['base_asset_min_qty'])
                         print(symbol_order + ' quantity to sell: ' + str(qty))
 
                         if qty > float(trade_info_dict['base_asset_min_qty']):
