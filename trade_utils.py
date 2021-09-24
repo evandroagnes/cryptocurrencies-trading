@@ -40,6 +40,7 @@ def resample_data(df, time_resample):
 def generate_technical_indicators(df):
     df['SMA50'] = sma(df['ClosePrice'], 50)
     df['SMA100'] = sma(df['ClosePrice'], 100)
+    df['SMA200'] = sma(df['ClosePrice'], 200)
     df['MACD'], df['MACDSignal'], df['MACDHist'] = macd(df.ClosePrice)
 
     return df
@@ -49,6 +50,7 @@ def update_signal_by_strategy(df):
 
     df['Signal50SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA50']].copy())
     df['SignalMACDStrategy'] = get_macd_signal(df[['MACDSignal']].copy(), df[['MACD']].copy())
+    df['SignalSMACrossStrategy'] = get_cross_signal(df[['SMA50']].copy(), df[['SMA200']].copy())
 
     return df
 
