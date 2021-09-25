@@ -35,9 +35,6 @@ if live_trade:
     print('LIVE TRADE!!!')
 else:
     client = init_test()
-    base_asset_order = 'BTC'
-    quote_asset_order = 'USDT'
-
     print('Test Trade...')
 
 twm = get_twm()
