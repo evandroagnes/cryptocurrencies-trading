@@ -95,6 +95,10 @@ def handle_socket_message(msg):
             if debug:
                 print(symbol_data[symbol].tail())
 
+def print_last_candle():
+    for key in symbol_data:
+        print('{}: {:%Y-%m-%d %H:%M:%S} ClosePrice: {:0.8f}'.format(key, symbol_data[key].index[-1], symbol_data[key]['ClosePrice'][-1]))
+
 def main(mode):
     try:
         twm.start()
@@ -120,13 +124,11 @@ def main(mode):
                     twm.stop()
                     sys.exit('Finished and exiting.')
                 elif selection == 'p':
-                    for key in symbol_data:
-                        print(symbol_data[key].tail())
+                    print_last_candle()
                 else:
                     print('Unknown option.')
     except KeyboardInterrupt:
-        for key in symbol_data:
-            print(symbol_data[key].tail())
+        print_last_candle()
         
         print('Exiting the program and stopping all processes.')
         # close connection
