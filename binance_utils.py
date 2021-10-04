@@ -183,6 +183,7 @@ def get_trade_info(client, symbol):
         if filter['filterType'] == 'PRICE_FILTER':
             min_price = filter['minPrice']
             max_price = filter['maxPrice']
+            tick_size = filter['tickSize']
         elif filter['filterType'] == 'LOT_SIZE':
             base_asset_min_qty = filter['minQty']
             base_asset_max_qty = filter['maxQty']
@@ -193,6 +194,7 @@ def get_trade_info(client, symbol):
             'quote_asset_precision': quote_asset_precision,
             'min_price': min_price,
             'max_price': max_price,
+            'tick_size': tick_size,
             'base_asset_min_qty': base_asset_min_qty,
             'base_asset_max_qty': base_asset_max_qty,
             'quote_asset_min_value': quote_asset_min_value,

@@ -1,8 +1,8 @@
 import pandas as pd
 from binance_utils import update_historical_data, get_asset_balance, create_market_order, get_round_value, get_trade_info
-from technical_indicator_utils import sma, macd
+from technical_indicator_utils import sma, macd, rsi, adx
 from message_utils import telegram_bot_sendtext
-from strategy_utils import get_cross_signal, get_macd_signal
+from strategy_utils import get_cross_signal, get_macd_signal, get_rsi_signal, get_rsi_adx_signal
 
 def initialize_ohlc_df():
     df = pd.DataFrame(columns=[
@@ -41,7 +41,9 @@ def generate_technical_indicators(df):
     df['SMA50'] = sma(df['ClosePrice'], 50)
     df['SMA100'] = sma(df['ClosePrice'], 100)
     df['SMA200'] = sma(df['ClosePrice'], 200)
-    df['MACD'], df['MACDSignal'], df['MACDHist'] = macd(df.ClosePrice)
+    df['MACD'], df['MACDSignal'], df['MACDHist'] = macd(df['ClosePrice'])
+    df['RSI'] = rsi(df['ClosePrice'])
+    df['DI+'], df['DI-'], df['ADX'] = adx(df['HighPrice'], df['LowPrice'], df['ClosePrice'])
 
     return df
 
@@ -51,6 +53,8 @@ def update_signal_by_strategy(df):
     df['Signal50SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA50']].copy())
     df['SignalMACDStrategy'] = get_macd_signal(df[['MACDSignal']].copy(), df[['MACD']].copy())
     df['SignalSMACrossStrategy'] = get_cross_signal(df[['SMA50']].copy(), df[['SMA200']].copy())
+    df['SignalRSIStrategy'] = get_rsi_signal(df[['RSI']].copy())
+    df['SignalRSIADXStrategy'] = get_rsi_adx_signal(df[['RSI']].copy(), df[['ADX']])
 
     return df
 
@@ -87,7 +91,7 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
                         # Get quote_asset balance
                         quote_balance, _ = get_asset_balance(client, quote_asset)
                         quote_balance = quote_balance * buy_amount
-                        quote_balance = get_round_value(quote_balance, float(trade_info_dict['min_price']))
+                        quote_balance = get_round_value(quote_balance, float(trade_info_dict['tick_size']))
                         print(symbol_order + ' quantity to buy: ' + str(quote_balance))
 
                         if quote_balance > float(trade_info_dict['quote_asset_min_value']):
@@ -106,9 +110,10 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
                         balance, _ = get_asset_balance(client, base_asset)
                         #balance = balance * (1.0 - fee)
                         qty = balance * sell_amount
-                        qty = get_round_value(qty, float(trade_info_dict['base_asset_min_qty']))
+                        qty = get_round_value(qty, float(trade_info_dict['tick_size']))
                         if qty > balance:
-                            qty = qty - float(trade_info_dict['base_asset_min_qty'])
+                            qty = get_round_value(qty - float(trade_info_dict['tick_size']), float(trade_info_dict['tick_size']))
+                            
                         print(symbol_order + ' quantity to sell: ' + str(qty))
 
                         if qty > float(trade_info_dict['base_asset_min_qty']):
