@@ -36,16 +36,18 @@ def get_rsi_signal(signal, overbought_value=70.0, oversold_value=30.0):
 
     return signal
 
-def get_rsi_adx_signal(signal, adx, overbought_value=70.0, oversold_value=30.0, adx_value=25.0):
+def get_rsi_adx_signal(signal, adx, di_plus, di_minus, overbought_value=70.0, oversold_value=30.0, adx_value=25.0):
     signal.columns = ['value']
     adx.columns = ['value']
+    di_plus.columns = ['value']
+    di_minus.columns = ['value']
 
-    signal[(signal < oversold_value) & (adx > adx_value)] = 1.0
-    signal[(signal > overbought_value) & (adx > adx_value)] = -1.0
+    signal[(signal < oversold_value) & (adx > adx_value) & (di_minus > di_plus)] = 1.0
+    signal[(signal > overbought_value) & (adx > adx_value) & (di_minus < di_plus)] = -1.0
 
     #signal[(signal != 1.0) & (signal != -1.0)] = np.nan
     #signal.fillna(method="ffill", inplace=True)
-    signal[(signal <= overbought_value) & (signal >= oversold_value)] = 0.0
+    #signal[(signal <= overbought_value) & (signal >= oversold_value)] = 0.0
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
     signal[signal.isnull()] = 0.0
 

@@ -187,6 +187,7 @@ def get_trade_info(client, symbol):
         elif filter['filterType'] == 'LOT_SIZE':
             base_asset_min_qty = filter['minQty']
             base_asset_max_qty = filter['maxQty']
+            base_asset_step_size = filter['stepSize']
         elif filter['filterType'] == 'MIN_NOTIONAL':
             quote_asset_min_value = filter['minNotional']
 
@@ -197,6 +198,7 @@ def get_trade_info(client, symbol):
             'tick_size': tick_size,
             'base_asset_min_qty': base_asset_min_qty,
             'base_asset_max_qty': base_asset_max_qty,
+            'base_asset_step_size': base_asset_step_size,
             'quote_asset_min_value': quote_asset_min_value,
             'exchange_fee': 0.001}
 

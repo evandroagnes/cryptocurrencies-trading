@@ -54,7 +54,12 @@ def update_signal_by_strategy(df):
     df['SignalMACDStrategy'] = get_macd_signal(df[['MACDSignal']].copy(), df[['MACD']].copy())
     df['SignalSMACrossStrategy'] = get_cross_signal(df[['SMA50']].copy(), df[['SMA200']].copy())
     df['SignalRSIStrategy'] = get_rsi_signal(df[['RSI']].copy())
-    df['SignalRSIADXStrategy'] = get_rsi_adx_signal(df[['RSI']].copy(), df[['ADX']])
+    df['SignalRSIADXStrategy'] = get_rsi_adx_signal(df[['RSI']].copy(), 
+                                                    df[['ADX']].copy(), 
+                                                    df[['DI+']].copy(), 
+                                                    df[['DI-']].copy(), 
+                                                    overbought_value=70.0, 
+                                                    oversold_value=30.0)
 
     return df
 
@@ -110,9 +115,9 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
                         balance, _ = get_asset_balance(client, base_asset)
                         #balance = balance * (1.0 - fee)
                         qty = balance * sell_amount
-                        qty = get_round_value(qty, float(trade_info_dict['tick_size']))
+                        qty = get_round_value(qty, float(trade_info_dict['base_asset_step_size']))
                         if qty > balance:
-                            qty = get_round_value(qty - float(trade_info_dict['tick_size']), float(trade_info_dict['tick_size']))
+                            qty = get_round_value(qty - float(trade_info_dict['base_asset_step_size']), float(trade_info_dict['base_asset_step_size']))
                             
                         print(symbol_order + ' quantity to sell: ' + str(qty))
 
