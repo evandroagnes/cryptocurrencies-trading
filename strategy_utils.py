@@ -37,6 +37,9 @@ def get_rsi_signal(signal, overbought_value=70.0, oversold_value=30.0):
     return signal
 
 def get_rsi_adx_signal(signal, adx, di_plus, di_minus, overbought_value=70.0, oversold_value=30.0, adx_value=25.0):
+    """
+    https://usethebitcoin.com/how-to-trade-pullbacks-using-rsi-and-adx/
+    """
     signal.columns = ['value']
     adx.columns = ['value']
     di_plus.columns = ['value']
@@ -155,8 +158,8 @@ def get_adx_macd_signal(macd, di_plus, di_minus, adx):
     signal = macd.copy()
 
     signal[(macd > 0) & (di_plus > di_minus) & (adx > 20)] = 1.0
-    signal[(macd <= 0) & (di_plus <= di_minus) & (adx > 20)] = -1.0
-    signal[signal.isnull()] = 0.0
+    signal[(macd < 0) & (di_plus < di_minus) & (adx > 20)] = -1.0
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+    signal[signal.isnull()] = 0.0
 
     return signal
