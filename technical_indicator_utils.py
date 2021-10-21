@@ -2,32 +2,32 @@ from os import close
 import numpy as np
 import pandas as pd
 
-def sma(close_price, period):
+def get_sma(close_price, period):
     return close_price.rolling(period).mean()
 
-def ema(close_price, period):
+def get_ema(close_price, period):
     return close_price.ewm(span=period, adjust=False).mean()
 
-def macd(close_price):
+def get_macd(close_price):
     #Calculate the MACD and Signal Line indicators
     #Calculate the Short Term Exponential Moving Average
-    ShortEMA = ema(close_price, 12)
+    ShortEMA = get_ema(close_price, 12)
 
     #Calculate the Long Term Exponential Moving Average
-    LongEMA = ema(close_price, 26)
+    LongEMA = get_ema(close_price, 26)
 
     #Calculate the Moving Average Convergence/Divergence (MACD)
     MACD = ShortEMA - LongEMA
 
     #Calcualte the signal line
-    signal = ema(MACD, 9)
+    signal = get_ema(MACD, 9)
 
     #Histogram
     macd_histogram = MACD - signal
  
     return MACD, signal, macd_histogram
 
-def rsi(close_price, period = 14):
+def get_rsi(close_price, period = 14):
 
     delta = close_price.diff()
 
@@ -44,7 +44,7 @@ def rsi(close_price, period = 14):
 
     return np.round(rsi, 2)
 
-def wilder_smoothing(data, periods):
+def get_wilder_smoothing(data, periods):
     start = np.where(~np.isnan(data))[0][0] #Check if nans present in beginning
     wilder = np.array([np.nan]*len(data))
     wilder[start+periods-1] = data[start:(start+periods)].mean() #Simple Moving Average
@@ -54,7 +54,7 @@ def wilder_smoothing(data, periods):
 
     return(wilder)
 
-def smoothing(data, periods):
+def get_smoothing(data, periods):
     start = np.where(~np.isnan(data))[0][0] #Check if nans present in beginning
     smooth = np.array([np.nan]*len(data))
     smooth[start+periods-1] = data[start:(start+periods)].sum()
@@ -64,7 +64,7 @@ def smoothing(data, periods):
         
     return(smooth)
 
-def adx(high_price, low_price, close_price, period=14):
+def get_adx(high_price, low_price, close_price, period=14):
     """ https://school.stockcharts.com/doku.php?id=technical_indicators:average_directional_index_adx
         https://blog.quantinsti.com/adx-indicator-python/ """
 
@@ -109,18 +109,18 @@ def adx(high_price, low_price, close_price, period=14):
     df_adx['DM+'] = np.where(high_price.shift().isna(), high_price.shift(), df_adx['DM+'])
     df_adx['DM-'] = np.where(low_price.shift().isna(), low_price.shift(), df_adx['DM-'])
 
-    df_adx['SmoothedDM+'] = wilder_smoothing(df_adx['DM+'], period)
-    df_adx['SmoothedDM-'] = wilder_smoothing(df_adx['DM-'], period)
-    df_adx['SmoothedTR'] = wilder_smoothing(df_adx['TR'], period)
+    df_adx['SmoothedDM+'] = get_wilder_smoothing(df_adx['DM+'], period)
+    df_adx['SmoothedDM-'] = get_wilder_smoothing(df_adx['DM-'], period)
+    df_adx['SmoothedTR'] = get_wilder_smoothing(df_adx['TR'], period)
 
     df_adx['DI+'] = (df_adx['SmoothedDM+']/df_adx['SmoothedTR'])*100
     df_adx['DI-'] = (df_adx['SmoothedDM-']/df_adx['SmoothedTR'])*100
     df_adx['DX'] = abs((df_adx['DI+'] - df_adx['DI-'])/(df_adx['DI+'] + df_adx['DI-']))*100
-    df_adx['ADX'] = wilder_smoothing(df_adx['DX'], period)
+    df_adx['ADX'] = get_wilder_smoothing(df_adx['DX'], period)
     
     return df_adx['DI+'], df_adx['DI-'], df_adx['ADX']
 
-def fibonacci_retracement_levels(price_max, price_min):
+def get_fibonacci_retracement_levels(price_max, price_min):
     diff = price_max - price_min
     level1 = price_max - 0.236 * diff
     level2 = price_max - 0.382 * diff
@@ -128,17 +128,9 @@ def fibonacci_retracement_levels(price_max, price_min):
 
     return {"price_max": price_max, "level1": level1, "level2": level2, "level3": level3, "price_min": price_min}
 
-def bbands(close_price, period=20, multiplier=2):
+def get_bbands(close_price, period=20, multiplier=2):
     upper = close_price.rolling(period).mean() + close_price.rolling(period).std() * multiplier
     midi = close_price.rolling(period).mean()
     lower = close_price.rolling(period).mean() - close_price.rolling(period).std() * multiplier
 
     return upper, midi, lower
-
-def fibonacci_retracement_levels(price_max, price_min):
-    diff = price_max - price_min
-    level1 = price_max - 0.236 * diff
-    level2 = price_max - 0.382 * diff
-    level3 = price_max - 0.618 * diff
-
-    return {"price_max": price_max, "level1": level1, "level2": level2, "level3": level3, "price_min": price_min}

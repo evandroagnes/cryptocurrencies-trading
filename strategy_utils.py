@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.lib.type_check import mintypecode
 import pandas as pd
 
 def get_cross_signal(short_data, long_data):
@@ -28,11 +29,11 @@ def get_rsi_signal(signal, overbought_value=70.0, oversold_value=30.0):
     signal[signal < oversold_value] = 1.0
     signal[signal > overbought_value] = -1.0
 
-    signal[(signal != 1.0) & (signal != -1.0)] = np.nan
-    signal.fillna(method="ffill", inplace=True)
-    signal[signal.isnull()] = 0.0
-    #signal[(signal <= overbought_value) & (signal >= oversold_value)] = 0.0
+    #signal[(signal != 1.0) & (signal != -1.0)] = np.nan
+    #signal.fillna(method="ffill", inplace=True)
     #signal[signal.isnull()] = 0.0
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+    signal[signal.isnull()] = 0.0
 
     return signal
 
@@ -159,6 +160,19 @@ def get_adx_macd_signal(macd, di_plus, di_minus, adx):
 
     signal[(macd > 0) & (di_plus > di_minus) & (adx > 20)] = 1.0
     signal[(macd < 0) & (di_plus < di_minus) & (adx > 20)] = -1.0
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+    signal[signal.isnull()] = 0.0
+
+    return signal
+
+def get_bbands_signal(price_data, upper_band, lower_band):
+    price_data.columns = ['value']
+    upper_band.columns = ['value']
+    lower_band.columns = ['value']
+
+    signal = price_data.copy()
+    signal[(price_data.shift() < lower_band) & (price_data >= lower_band)] = 1.0
+    signal[(price_data.shift() > upper_band) & (price_data <= upper_band)] = -1.0
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
     signal[signal.isnull()] = 0.0
 

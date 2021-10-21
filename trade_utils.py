@@ -1,6 +1,6 @@
 import pandas as pd
 from binance_utils import update_historical_data, get_asset_balance, create_market_order, get_round_value, get_trade_info
-from technical_indicator_utils import sma, macd, rsi, adx
+from technical_indicator_utils import get_sma, get_macd, get_rsi, get_adx
 from message_utils import telegram_bot_sendtext
 from strategy_utils import get_cross_signal, get_macd_signal, get_rsi_signal, get_rsi_adx_signal
 
@@ -38,12 +38,12 @@ def resample_data(df, time_resample):
     return df_resample
 
 def generate_technical_indicators(df):
-    df['SMA50'] = sma(df['ClosePrice'], 50)
-    df['SMA100'] = sma(df['ClosePrice'], 100)
-    df['SMA200'] = sma(df['ClosePrice'], 200)
-    df['MACD'], df['MACDSignal'], df['MACDHist'] = macd(df['ClosePrice'])
-    df['RSI'] = rsi(df['ClosePrice'])
-    df['DI+'], df['DI-'], df['ADX'] = adx(df['HighPrice'], df['LowPrice'], df['ClosePrice'])
+    df['SMA50'] = get_sma(df['ClosePrice'], 50)
+    df['SMA100'] = get_sma(df['ClosePrice'], 100)
+    df['SMA200'] = get_sma(df['ClosePrice'], 200)
+    df['MACD'], df['MACDSignal'], df['MACDHist'] = get_macd(df['ClosePrice'])
+    df['RSI'] = get_rsi(df['ClosePrice'])
+    df['DI+'], df['DI-'], df['ADX'] = get_adx(df['HighPrice'], df['LowPrice'], df['ClosePrice'])
 
     return df
 
