@@ -3,7 +3,8 @@ import pandas as pd
 from statsmodels.tsa.stattools import adfuller
 
 def get_labels_future_returns(price_data):
-    """Binary labelling.
+    """
+    Binary labelling.
  
     If future returns > 0 then signal = 1 (buy) otherwise = -1 (sell).
  
@@ -26,17 +27,16 @@ def get_labels_future_returns(price_data):
     return price_data[['signal']].copy()
 
 def get_labels_fixed_time_horizon(price_data, threshold):
-    """Fixed-time horizon labelling.
+    """
+    Fixed-time horizon labelling.
  
     Compute the financial labels using the fixed-time horizon procedure.
  
     Parameters
     ----------
-    data : pandas.DataFrame or pandas.Series
-        The data from which the labels are to be calculated. The data should be
-        returns and not prices.
-    name : str, optional, default: 'Close'
-        Column to extract the labels from.        
+    price_data : pandas.DataFrame or pandas.Series
+        The data from which the labels are to be calculated.
+      
     threshold : int
         The predefined constant threshold to compute the labels.
  
@@ -69,7 +69,8 @@ def get_labels_fixed_time_horizon(price_data, threshold):
     return labs
 
 def is_stationary(series):
-    """Function to check if the series is stationary or not.
+    """
+    Function to check if the series is stationary or not.
     """
     result = adfuller(series)
     if(result[1] < 0.05):
@@ -78,7 +79,8 @@ def is_stationary(series):
         return False
 
 def get_pair_above_threshold(X, threshold):
-    """Function to return the pairs with correlation above threshold.
+    """
+    Function to return the pairs with correlation above threshold.
     """
     # Calculate the correlation matrix
     correl = X.corr()
