@@ -2,7 +2,7 @@ import pandas as pd
 from binance_utils import update_historical_data, get_asset_balance, create_market_order, get_round_value, get_trade_info
 from technical_indicator_utils import get_sma, get_macd, get_rsi, get_adx
 from message_utils import telegram_bot_sendtext
-from strategy_utils import get_cross_signal, get_macd_signal, get_rsi_signal, get_rsi_adx_signal
+from strategy_utils import get_cross_signal, get_macd_signal, get_rsi_signal, get_rsi_adx_signal, get_sma_macd_signal
 
 def initialize_ohlc_df():
     df = pd.DataFrame(columns=[
@@ -47,19 +47,27 @@ def generate_technical_indicators(df):
 
     return df
 
-def update_signal_by_strategy(df):
+def update_signal_by_strategy(df, signal_column):
     df = generate_technical_indicators(df)
 
-    df['Signal50SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA50']].copy())
-    df['SignalMACDStrategy'] = get_macd_signal(df[['MACDSignal']].copy(), df[['MACD']].copy())
-    df['SignalSMACrossStrategy'] = get_cross_signal(df[['SMA50']].copy(), df[['SMA200']].copy())
-    df['SignalRSIStrategy'] = get_rsi_signal(df[['RSI']].copy())
-    df['SignalRSIADXStrategy'] = get_rsi_adx_signal(df[['RSI']].copy(), 
-                                                    df[['ADX']].copy(), 
-                                                    df[['DI+']].copy(), 
-                                                    df[['DI-']].copy(), 
-                                                    overbought_value=70.0, 
-                                                    oversold_value=30.0)
+    if signal_column == 'Signal50SMAStrategy':
+        df['Signal50SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA50']].copy())
+    elif signal_column == 'SignalMACDStrategy':
+        df['SignalMACDStrategy'] = get_macd_signal(df[['MACDSignal']].copy(), df[['MACD']].copy())
+    elif signal_column == 'SignalRSIStrategy':
+        df['SignalRSIStrategy'] = get_rsi_signal(df[['RSI']].copy())
+    elif signal_column == 'SignalRSIADXStrategy':
+        df['SignalRSIADXStrategy'] = get_rsi_adx_signal(df[['RSI']].copy(), 
+                                                        df[['ADX']].copy(), 
+                                                        df[['DI+']].copy(), 
+                                                        df[['DI-']].copy(), 
+                                                        overbought_value=70.0, 
+                                                        oversold_value=30.0)
+    elif signal_column == 'SignalSMAMACDStrategy':
+        df['SignalSMAMACDStrategy'] = get_sma_macd_signal(df[['ClosePrice']].copy(), 
+                                                          df[['SMA50']].copy(), 
+                                                          df[['SMA100']].copy(), 
+                                                          df[['MACD']].copy())
 
     return df
 
@@ -81,7 +89,7 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
 
         if is_candle_closed(df, interval):
             df_trade = resample_data(df, interval)
-            df_trade = update_signal_by_strategy(df_trade)
+            df_trade = update_signal_by_strategy(df_trade, signal_column)
 
             if df_trade[signal_column][-2] != df_trade[signal_column][-1]:
                 # get info about create orders (minimum, maximum, ...)

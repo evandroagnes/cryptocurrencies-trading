@@ -81,9 +81,6 @@ def handle_socket_message(msg):
             if debug:
                 print(new_row)
             
-            if symbol not in symbol_data:
-                symbol_data[symbol] = get_data(client, symbol, interval, save=False)
-            
             # process data
             symbol_data[symbol] = process_candle(client,
                     symbol,
@@ -105,6 +102,7 @@ def main(mode):
         print('Trade started...')
 
         for symbol in symbol_list:
+            symbol_data[symbol] = get_data(client, symbol, interval)
             twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
     
         while 1:
