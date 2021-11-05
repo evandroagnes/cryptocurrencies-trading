@@ -134,3 +134,33 @@ def get_bbands(close_price, period=20, multiplier=2):
     lower = close_price.rolling(period).mean() - close_price.rolling(period).std() * multiplier
 
     return upper, midi, lower
+
+def get_momentum(close_price, n):
+    return close_price / close_price.shift(n) - 1
+
+def get_sma_ratio(close_price, n):
+    return close_price / close_price.rolling(n).mean() - 1
+
+def get_sharpe_ratio(returns):
+    return returns.mean() / returns.std()
+
+def get_bbands_ratio(close_price, n=20):
+    return (close_price - close_price.rolling(n).mean()) / (2 * close_price.rolling(n).std())
+
+def normalize(data):
+    #return (data.values - data.values.mean()) / data.values.std()
+    return (data - data.mean()) / data.std()
+
+def bband_width(upper_band, lower_band, midi_band):
+    """
+    This technical indicator provides an easy way to visualize consolidation before price movements (low bandwidth values) or 
+    periods of higher volatility (high bandwidth values).
+    The Bollinger Band Width uses the same two parameters as the Bollinger Bands: 
+    -a simple moving-average period (for the middle band) and 
+    -the number of standard deviations by which the upper and lower bands should be offset from the middle band.
+    """
+
+    return (upper_band - lower_band) / midi_band
+
+def bband_b(close_price, upper_band, lower_band):
+    return ((close_price - lower_band) / (upper_band - lower_band)) * 100
