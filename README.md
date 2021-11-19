@@ -10,7 +10,7 @@ Run the following line in the terminal: `pip install -r requirements.txt`.
 
 (Currently the project only support Binance, but you might create the functions needed to other exchanges.)
 
-- You could use [my referral](https://accounts.binance.com/en/register?ref=43137026) to create a binance account link if you want.
+- You could use [my referral](https://accounts.binance.com/en/register?ref=43137026) link to create a binance account, if you want.
 - Create a new api key. Read [here](https://www.binance.com/en/support/faq/360002502072) for help.
 
 It is recommended to use the Binance Spot Test Network before to avoid mistakes and lose your funds. You could follow [these](https://testnet.binance.vision/) instructions to do this.
