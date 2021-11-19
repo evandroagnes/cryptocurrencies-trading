@@ -3,7 +3,6 @@ The goal of this project is to build a parametrized bot to automate trading base
 
 **This is a work in progress project, not production ready.**
 
-
 ## Setup
 **Install Python dependencies:**
 
@@ -70,6 +69,12 @@ Update `data\trade-strategies.csv` with your strategies. Be careful with `Create
 - BuyAmount: percent of value to buy 1.0 = 100%.
 - SellAmount: percent of value to sell 1.0 = 100%.
 - Message: message that was sent when the signal to sell or buy is reached.
+
+**Run**
+
+```shell
+python trade.py
+```
 
 ## Jupyter notebooks files
 
