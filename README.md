@@ -1,6 +1,9 @@
 # Cryptocurrencies trade bot
 The goal of this project is to build a parametrized bot to automate trading based on indicators, statistics and machine/deep/reinforce learning.
 
+**This is a work in progress project, not production ready.**
+
+
 ## Setup
 **Install Python dependencies:**
 
@@ -75,5 +78,3 @@ There are also some jupyter notebooks to perform analysis, backtesting and predi
 - cryptocurrencies_analysis: price analysis and backtesting on strategies;
 - cryptocurrencies_ml: a base machine learning model;
 - cryptocurrencies_alts: comparative altcoins analysis;
-
-## This is a **work in progress** project, **not production ready**.
