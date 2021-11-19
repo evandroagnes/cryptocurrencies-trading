@@ -24,24 +24,37 @@ To receive messages or alerts you need a bot in Telegram. Follow [these](https:/
 Create a .cfg file named `config.yml` based on `config.yml.example`, then update with your own data. The configuration file consists of the following fields:
 
 - params:
+
     **mode**: 1 - interactive, 2 - process, when you want to run as a service or in background;
+
     **symbol**: a list of pairs to trade. Example: ['BTCUSDT', 'ETHUSDT']
+
     **interval**: an interval to trade. Valid intervals are: 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
+
     **base_asset_order**: List of the base assets to create na order. Sometimes you want analyze and compute data from a different symbol. The list must be the same lenght as 'symbol'. Example: ['BTC', 'ETH']
+
     **quote_asset_order**: List of quote assets to create orders. The logic is the same as 'base_asset_order'. Example: ['USDT', 'USDT']
+
     **live_trade**: live or test trade: 0 - False, 1 - True. Be careful with this parameter.
 
 - api_creds:
+
     **binance1_access_code**: Binance API key generated in the Binance account setup stage.
+
     **binance1_secret_code**: Binance secret key generated in the Binance account setup stage.
 
 - api_test_creds:
+
     **binance_test_access_code**: Binance Spot Test Network api key.
+
     **binance_test_secret_code**: Binance Spot Test Network secret key.
 
 - telegram:
+
     **bot_token**: token from telegram bot
+
     **bot_chatID**: chat id
+
 
 **Create trade strategies:**
 
