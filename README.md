@@ -7,6 +7,7 @@ The goal of this project is to build a parametrized bot to automate trading base
 Run the following line in the terminal: `pip install -r requirements.txt`.
 
 **Create a Binance account and api keys:**
+
 (Currently the project only support Binance, but you might create the functions needed to other exchanges.)
 
 - You could use [my referral](https://accounts.binance.com/en/register?ref=43137026) link if you want.
