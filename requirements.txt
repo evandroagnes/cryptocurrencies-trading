@@ -7,5 +7,7 @@ seaborn==0.11.1
 statsmodels==0.12.2
 requests==2.26.0
 PyYAML==5.4.1
-python-binance==1.0.12
+python-binance==1.0.15
 bt==0.2.9
+tqdm==4.62.2
+pyarrow==6.0.1

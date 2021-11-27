@@ -1,4 +1,6 @@
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 from binance_utils import update_historical_data, get_asset_balance, create_market_order, get_round_value, get_trade_info
 from technical_indicator_utils import get_sma, get_macd, get_rsi, get_adx
 from message_utils import telegram_bot_sendtext
@@ -144,14 +146,12 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
 
 def get_data(client, pair, interval, save=True):
     try:
-        df = pd.read_csv('data/' + pair + '-1m-binance-all.csv')
-        df['OpenTime'] = pd.to_datetime(df['OpenTime'])
-        df.set_index('OpenTime', inplace=True)
+        table = pq.read_table('data/' + pair + '-1m-binance-all.parquet')
+        df = table.to_pandas()
     except FileNotFoundError:
         try:
-            df = pd.read_csv('data/' + pair + '-1m-binance.csv')
-            df['OpenTime'] = pd.to_datetime(df['OpenTime'])
-            df.set_index('OpenTime', inplace=True)
+            table = pq.read_table('data/' + pair + '-1m-binance.parquet')
+            df = table.to_pandas()
         except FileNotFoundError:
             df = initialize_ohlc_df()
 
@@ -159,13 +159,15 @@ def get_data(client, pair, interval, save=True):
     
     if save:
         # save all data
-        filename = 'data/' + pair + '-1m-binance-all.csv'
-        df.to_csv(filename)
+        filename = 'data/' + pair + '-1m-binance-all.parquet'
+        table = pa.Table.from_pandas(df)
+        pq.write_table(table, filename)
 
         # create data file with data from 2020 until now for share (github)
         df_from_2020 = df['2020-1-1':]
-        filename = 'data/' + pair + '-1m-binance.csv'
-        df_from_2020.to_csv(filename)
+        filename = 'data/' + pair + '-1m-binance.parquet'
+        table_from_2020 = pa.Table.from_pandas(df_from_2020)
+        pq.write_table(table_from_2020, filename)
     
     # valid intervals - 1min, 3min, 5min, 15min, 30min, 1H, 2H, 4H, 6H, 8H, 12H, 1D, 3D, 1W, 1M
     # TODO validate input
