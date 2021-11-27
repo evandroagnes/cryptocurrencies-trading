@@ -132,4 +132,5 @@ dmypy.json
 config.yml
 data/*-all.csv
 data/*-all.csv
+data/*.parquet
 chromedriver*
