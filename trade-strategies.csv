@@ -1,0 +1,6 @@
+Symbol,Interval,SignalColumnName,CreateOrders,BuyAmount,SellAmount,Message
+BTCUSDT,1D,Signal50SMAStrategy,0,1.0,1.0,The price crossed 50 SMA line
+SOLBTC,1H,SignalMACDStrategy,0,0.5,1.0,MACD signal crossed
+BNBBTC,1H,SignalSMAMACDStrategy,0,0.1,0.8,SMA-MACD signal
+ENJBTC,1H,Signal30SMAStrategy,0,0.5,1.0,The price crossed 30 SMA line
+CHZBTC,1H,SignalMACDStrategy,0,0.1,1.0,MACD signal crossed
