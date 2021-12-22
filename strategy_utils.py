@@ -25,6 +25,33 @@ def get_macd_signal(signal_macd, macd_value):
 
     return signal 
 
+def get_macd_rvi_signal(signal_macd, macd_value, signal_rvi, rvi_value):
+    """
+    Reference: https://forexwot.com/super-macd-rvi-trading-strategy-for-day-trading-crypto-forex-stocks-high-winrate-strategy.html
+    """
+    signal_macd.columns = ['value']
+    macd_value.columns = ['value']
+    signal_rvi.columns = ['value']
+    rvi_value.columns = ['value']
+    
+    signal = macd_value.copy()
+ 
+    #long
+    signal[(signal_macd < macd_value) & (signal_rvi < rvi_value)] = 1.0
+    #exit
+    #signal[(signal_macd > macd_value) & (signal.shift() == 1.0)] = -1.0
+
+    #short
+    signal[(signal_macd > macd_value) & (signal_rvi > rvi_value)] = -1.0
+    #exit
+    #signal[(signal_macd < macd_value) & (signal.shift() == -1.0)] = 1.0
+
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+    #remove repeated signals
+    signal = signal.where(signal.diff().ne(0)).fillna(0.0)
+
+    return signal 
+
 def get_rsi_signal(signal, overbought_value=70.0, oversold_value=30.0):
     signal[signal < oversold_value] = 1.0
     signal[signal > overbought_value] = -1.0

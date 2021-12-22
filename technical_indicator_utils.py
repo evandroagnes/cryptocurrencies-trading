@@ -164,3 +164,50 @@ def bband_width(upper_band, lower_band, midi_band):
 
 def bband_b(close_price, upper_band, lower_band):
     return ((close_price - lower_band) / (upper_band - lower_band)) * 100
+
+def get_hurst(price_data, lags_to_test=[2,20]):
+    """
+    Hurst = 0.5 -> Brownian Motion (random walk)
+    Hurst < 0.5 -> Mean reversion
+    Hurst > 0.5 -> Momentum
+
+    Reference: https://www.coursera.org/learn/machine-learning-trading-finance
+    """
+    tau = []
+    lagvec = []
+    for lag in range(lags_to_test[0], lags_to_test[1]):
+        pp = np.subtract(price_data[lag:], price_data[:-lag])
+        lagvec.append(lag)
+        tau.append(np.std(pp))
+    
+    m = np.polyfit(np.log10(lagvec), np.log10(tau), 1)
+    hurst = m[0]
+
+    return hurst
+
+def get_rvi(open_price, close_price, low_price, high_price, period=10):
+    """
+    Reference: https://kaabar-sofien.medium.com/the-relative-vigor-index-coding-trading-in-python-29af776f57cc
+    """
+    a = close_price - open_price
+    b =  2 * (close_price.shift(2) - open_price.shift(2))
+    c =  2 * (close_price.shift(3) - open_price.shift(3))
+    d =  2 * (close_price.shift(4) - open_price.shift(4))
+
+    e = high_price - low_price
+    f =  2 * (high_price.shift(2) - low_price.shift(2))
+    g =  2 * (high_price.shift(3) - low_price.shift(3))
+    h =  2 * (high_price.shift(4) - low_price.shift(4))
+
+    Numerator = (a + b + c + d) / 6
+    Denominator = (e + f + g + h) / 6
+
+    rvi = get_sma(Numerator, period) / get_sma(Denominator, period)
+
+    rvi1 = 2 * rvi.shift()
+    rvi2 = 2 * rvi.shift(2)
+    rvi3 = rvi.shift(3)
+
+    signal = (rvi + rvi1 + rvi2 + rvi3) / 6
+
+    return rvi, signal
