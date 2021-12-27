@@ -2,9 +2,9 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 from binance_utils import update_historical_data, get_asset_balance, create_market_order, get_round_value, get_trade_info
-from technical_indicator_utils import get_sma, get_macd, get_rsi, get_adx
+from technical_indicator_utils import get_sma, get_macd, get_rsi, get_adx, get_rvi
 from message_utils import telegram_bot_sendtext
-from strategy_utils import get_cross_signal, get_macd_signal, get_rsi_signal, get_rsi_adx_signal, get_sma_macd_signal
+from strategy_utils import get_cross_signal, get_macd_signal, get_rsi_signal, get_rsi_adx_signal, get_sma_macd_signal, get_macd_rvi_signal
 
 def initialize_ohlc_df():
     df = pd.DataFrame(columns=[
@@ -47,6 +47,7 @@ def generate_technical_indicators(df):
     df['MACD'], df['MACDSignal'], df['MACDHist'] = get_macd(df['ClosePrice'])
     df['RSI'] = get_rsi(df['ClosePrice'])
     df['DI+'], df['DI-'], df['ADX'] = get_adx(df['HighPrice'], df['LowPrice'], df['ClosePrice'])
+    df['RVI'], df['RVISignal'] = get_rvi(df['OpenPrice'], df['ClosePrice'], df['LowPrice'], df['HighPrice'])
 
     return df
 
@@ -73,6 +74,11 @@ def update_signal_by_strategy(df, signal_column):
                                                           df[['SMA50']].copy(), 
                                                           df[['SMA100']].copy(), 
                                                           df[['MACD']].copy())
+    elif signal_column == 'SignalMACDRVIStrategy':
+        df['SignalMACDRVIStrategy'] = get_macd_rvi_signal(df[['MACDSignal']].copy(), 
+                                                          df[['MACD']].copy(), 
+                                                          df[['RVISignal']].copy(), 
+                                                          df[['RVI']].copy())
 
     return df
 
@@ -91,6 +97,7 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
         create_orders = bool(strategy['CreateOrders'])
         buy_amount = float(strategy['BuyAmount'])
         sell_amount = float(strategy['SellAmount'])
+        message = ''
 
         if is_candle_closed(df, interval):
             df_trade = resample_data(df, interval)
