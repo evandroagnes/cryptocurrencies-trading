@@ -5,6 +5,7 @@ from binance.client import Client
 from binance import ThreadedWebsocketManager
 from binance.exceptions import BinanceAPIException, BinanceOrderException
 from binance.helpers import round_step_size
+from binance.enums import *
 
 """ To read a cfg file
 import configparser
@@ -134,36 +135,62 @@ def create_market_order(client, symbol, side, quantity):
     - quantity: quantity to create a order.
                 - to BUY: quantity of quote_asset;
                 - to SELL: quantity of base_asset. 
-    - live: False (default) for test operations, True for live operations (real coins), be carefull
 
     Return: order created
     """
     order = {}
 
-    if side == 'BUY':
-        try:
+    try:
+        if side == 'BUY':
             order = client.order_market_buy(symbol=symbol, quoteOrderQty=quantity)
-        except BinanceAPIException as e:
-            # error handling
-            print(e)
-        except BinanceOrderException as e:
-            # error handling
-            print(e)
-    elif side == 'SELL':
-        try:
+        elif side == 'SELL':
             order = client.order_market_sell(symbol=symbol, quantity=quantity)
+        else:
+            # TODO handle wrong side
+            print('Wrong side, must be \'BUY\' or \'SELL\'! ' + side)
+    except BinanceAPIException as e:
+        # error handling
+        print(e)
+        raise
+    except BinanceOrderException as e:
+        # error handling
+        print(e)
+        raise
+    
+    return order
+
+def create_oco_order(client, symbol, side, quantity, stop_price, price):
+    order = {}
+    
+    if side == 'BUY':
+        print('BUY is not implemented yet!')
+    elif side == 'SELL':
+        """         
+        try:
+            order = client.create_oco_order(
+                symbol=symbol,
+                side=side,
+                stopLimitTimeInForce=TIME_IN_FORCE_GTC,
+                quantity=quantity,
+                stopPrice=stop_price,
+                stopLimitPrice=stop_price,
+                price=price)
         except BinanceAPIException as e:
             # error handling
             print(e)
+            raise
         except BinanceOrderException as e:
             # error handling
             print(e)
+            raise
+        """
+        order = 'Create an oco order (quantity: ' + str(quantity) + ', stop: ' + str(stop_price) + ', price: ' + str(price) + ')'
     else:
         # TODO handle wrong side
         print('Wrong side, must be \'BUY\' or \'SELL\'! ' + side)
     
     return order
- 
+
 def get_asset_balance(client, asset):
     balance = client.get_asset_balance(asset=asset)
     
@@ -209,3 +236,6 @@ def get_lastest_price(client, symbol):
     btc_price = client.get_symbol_ticker(symbol=symbol)
     
     return float(btc_price['price'])
+
+def get_open_orders(client, symbol):
+    return client.get_open_orders(symbol=symbol)

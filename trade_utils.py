@@ -1,7 +1,7 @@
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-from binance_utils import update_historical_data, get_asset_balance, create_market_order, get_round_value, get_trade_info
+from binance_utils import *
 from technical_indicator_utils import get_sma, get_macd, get_rsi, get_adx, get_rvi
 from message_utils import telegram_bot_sendtext
 from strategy_utils import get_cross_signal, get_macd_signal, get_rsi_signal, get_rsi_adx_signal, get_sma_macd_signal, get_macd_rvi_signal
@@ -82,6 +82,50 @@ def update_signal_by_strategy(df, signal_column):
 
     return df
 
+def roll_oco_orders(client, symbol):
+    order = {}
+    orders = get_open_orders(client, symbol)
+
+    if len(orders) > 0:
+        # eliminate duplicates with set
+        order_list_set = set([order['orderListId'] for order in orders if order['orderListId'] != -1])
+        for order_list_id in order_list_set:
+            orders_by_list_id = [order for order in orders if order['orderListId'] == order_list_id]
+            print(orders_by_list_id)
+            # test if open orders is an oco order
+            if len(orders_by_list_id) == 2:
+                # get current symbol price
+                current_price = get_lastest_price(client, symbol)
+
+                side = [order['side'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0]
+                if side == 'SELL':
+                    order_id_stop = [order['orderId'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0]
+                    quantity = float([order['origQty'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0])
+                    stop_price = float([order['stopPrice'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0])
+                    limit_stop_price = float([order['price'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0])
+                    limit_price = float([order['price'] for order in orders_by_list_id if order['type'] == 'LIMIT_MAKER'][0])
+
+                    trade_info = get_trade_info(client, symbol)
+                    increment = (limit_price - limit_stop_price) / 3
+                    increment = get_round_value(increment, float(trade_info['min_price']))
+
+                    if (current_price > (limit_stop_price + increment)):
+                        # cancel orders with old values
+                        result = client.cancel_order(
+                                        symbol=symbol,
+                                        orderId=order_id_stop)
+
+                        # recreate order with increment value
+                        order = create_oco_order(
+                            client=client,
+                            symbol=symbol,
+                            side=SIDE_SELL,
+                            quantity=quantity,
+                            stop_price=stop_price + increment,
+                            price=limit_price + increment)
+    
+    return order
+
 def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
     df = add_row(df, new_row)
     symbol_order = base_asset + quote_asset
@@ -97,6 +141,14 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
         create_orders = bool(strategy['CreateOrders'])
         buy_amount = float(strategy['BuyAmount'])
         sell_amount = float(strategy['SellAmount'])
+        oco_rolling = bool(strategy['OCORolling'])
+
+        if oco_rolling:
+            oco_order = roll_oco_orders(client, symbol_order)
+            if oco_order != {}:
+                print('OCO orders are rolled: ' + str(oco_order))
+                telegram_bot_sendtext('OCO orders are rolled: ' + str(oco_order))
+
         message = ''
 
         if is_candle_closed(df, interval):
@@ -123,6 +175,27 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
                             order = create_market_order(client, symbol_order, side, quote_balance)
                             message = 'Buy order sent: ' + str(order)
                             print(message)
+                            if oco_rolling:
+                                    # get buy value
+                                    buy_value = get_round_value(pd.DataFrame(order['fills'])['price'].astype('float').mean(), 
+                                        float(trade_info_dict['min_price']))
+                                    quantity = float(order['executedQty'])
+                                    # stop = get min low value of last 5 candles
+                                    stop_value = get_round_value(df_trade[-5:]['LowPrice'].min(), float(trade_info_dict['min_price']))
+                                    # price = buy value + (2 * (buy value - stop))
+                                    price_value = buy_value + (2 * (buy_value - stop_value))
+                                    price_value = get_round_value(price_value, float(trade_info_dict['min_price']))
+                                    # create OCO order to sell
+                                    oco_order = create_oco_order(
+                                        client=client,
+                                        symbol=symbol_order,
+                                        side='SELL',
+                                        quantity=quantity,
+                                        stop_price=stop_value,
+                                        price=price_value)
+
+                                    print('OCO order sent: ' + str(oco_order))
+                                    telegram_bot_sendtext('OCO order sent: ' + str(oco_order))
                         else:
                             message = 'Unable to BUY, ' + quote_asset + ' without balance: ' + str(quote_balance)
                     else:
@@ -239,3 +312,10 @@ def is_candle_closed(df, interval):
             return True
     
     return False
+
+def get_num_daily_bars(df):
+    NUM_SECONDS_IN_A_DAY=86400
+
+    delta = df.index[-1] - df.index[-2]
+
+    return int(NUM_SECONDS_IN_A_DAY / ((NUM_SECONDS_IN_A_DAY * delta.days) + delta.seconds))
