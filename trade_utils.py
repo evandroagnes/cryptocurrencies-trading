@@ -241,23 +241,27 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
     return df
 
 def get_data(client, pair, interval, save=True):
+    save_all = False
     try:
         table = pq.read_table('data/' + pair + '-1m-binance-all.parquet')
         df = table.to_pandas()
+        save_all = True
     except FileNotFoundError:
         try:
             table = pq.read_table('data/' + pair + '-1m-binance.parquet')
             df = table.to_pandas()
         except FileNotFoundError:
             df = initialize_ohlc_df()
+            save_all = True
 
     df = update_historical_data(client, df, pair, '1m')
     
     if save:
         # save all data
-        filename = 'data/' + pair + '-1m-binance-all.parquet'
-        table = pa.Table.from_pandas(df)
-        pq.write_table(table, filename)
+        if save_all:
+            filename = 'data/' + pair + '-1m-binance-all.parquet'
+            table = pa.Table.from_pandas(df)
+            pq.write_table(table, filename)
 
         # create data file with data from 2020 until now for share (github)
         df_from_2020 = df['2020-1-1':]
