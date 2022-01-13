@@ -179,10 +179,6 @@ def create_oco_order(client, symbol, side, quantity, stop_price, price):
             # error handling
             print(e)
             raise
-        except BinanceOrderException as e:
-            # error handling
-            print(e)
-            raise
         """
         order = 'Create an oco order (quantity: ' + str(quantity) + ', stop: ' + str(stop_price) + ', price: ' + str(price) + ')'
     else:
@@ -239,3 +235,16 @@ def get_lastest_price(client, symbol):
 
 def get_open_orders(client, symbol):
     return client.get_open_orders(symbol=symbol)
+
+def cancel_order(client, symbol, order_id):
+    """
+    try:
+        result =  client.cancel_order(symbol=symbol, orderId=order_id)
+    except BinanceAPIException as e:
+        # error handling
+        print(e)
+        raise
+
+    return result
+    """
+    return str(order_id)

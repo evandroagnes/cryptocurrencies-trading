@@ -20,6 +20,7 @@ base_asset_order_list = cfg['params']['base_asset_order']
 quote_asset_order_list = cfg['params']['quote_asset_order']
 interval = cfg['params']['interval']
 live_trade = bool(cfg['params']['live_trade'])
+oco_rolling = bool(cfg['params']['roll_oco_orders'])
 # End trade parameters
 
 # create a dictionary with the symbol and it respective order asset
@@ -87,7 +88,8 @@ def handle_socket_message(msg):
                     symbol_data[symbol], 
                     new_row, 
                     base_asset_order_dic[symbol], 
-                    quote_asset_order_dic[symbol])
+                    quote_asset_order_dic[symbol],
+                    oco_rolling)
 
             if debug:
                 print(symbol_data[symbol].tail())

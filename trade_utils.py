@@ -2,9 +2,9 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 from binance_utils import *
-from technical_indicator_utils import get_sma, get_macd, get_rsi, get_adx, get_rvi
+from technical_indicator_utils import get_sma, get_macd, get_rsi, get_adx, get_rvi, get_bbands
 from message_utils import telegram_bot_sendtext
-from strategy_utils import get_cross_signal, get_macd_signal, get_rsi_signal, get_rsi_adx_signal, get_sma_macd_signal, get_macd_rvi_signal
+from strategy_utils import *
 
 def initialize_ohlc_df():
     df = pd.DataFrame(columns=[
@@ -48,6 +48,7 @@ def generate_technical_indicators(df):
     df['RSI'] = get_rsi(df['ClosePrice'])
     df['DI+'], df['DI-'], df['ADX'] = get_adx(df['HighPrice'], df['LowPrice'], df['ClosePrice'])
     df['RVI'], df['RVISignal'] = get_rvi(df['OpenPrice'], df['ClosePrice'], df['LowPrice'], df['HighPrice'])
+    df['UpperBBand'], df['MidiBBand'], df['LowerBBand'] = get_bbands(df['ClosePrice'])
 
     return df
 
@@ -79,6 +80,10 @@ def update_signal_by_strategy(df, signal_column):
                                                           df[['MACD']].copy(), 
                                                           df[['RVISignal']].copy(), 
                                                           df[['RVI']].copy())
+    elif signal_column == 'SignalBBandsStrategy':
+        df['SignalBBandsStrategy'] = get_bbands_signal(df[['ClosePrice']].copy(), 
+                                                       df[['UpperBBand']].copy(), 
+                                                       df[['LowerBBand']].copy())
 
     return df
 
@@ -91,7 +96,6 @@ def roll_oco_orders(client, symbol):
         order_list_set = set([order['orderListId'] for order in orders if order['orderListId'] != -1])
         for order_list_id in order_list_set:
             orders_by_list_id = [order for order in orders if order['orderListId'] == order_list_id]
-            print(orders_by_list_id)
             # test if open orders is an oco order
             if len(orders_by_list_id) == 2:
                 # get current symbol price
@@ -109,11 +113,12 @@ def roll_oco_orders(client, symbol):
                     increment = (limit_price - limit_stop_price) / 3
                     increment = get_round_value(increment, float(trade_info['min_price']))
 
-                    if (current_price > (limit_stop_price + increment)):
-                        # cancel orders with old values
-                        result = client.cancel_order(
-                                        symbol=symbol,
-                                        orderId=order_id_stop)
+                    if (current_price > (limit_price - increment)):
+                        # cancel old orders
+                        result = cancel_order(client=client,
+                            symbol=symbol,
+                            orderId=order_id_stop)
+                        print(result)
 
                         # recreate order with increment value
                         order = create_oco_order(
@@ -123,16 +128,26 @@ def roll_oco_orders(client, symbol):
                             quantity=quantity,
                             stop_price=stop_price + increment,
                             price=limit_price + increment)
+                        
+                        print(order)
+                elif side == 'BUY':
+                    print('BUY is not implemented yet!')
     
     return order
 
-def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
+def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rolling):
     df = add_row(df, new_row)
     symbol_order = base_asset + quote_asset
 
     # Read every call because the strategy can be changed in the file.
     df_strategies = pd.read_csv('trade-strategies.csv')
     df_strategies = df_strategies[df_strategies['Symbol'] == symbol]
+
+    if oco_rolling:
+        oco_order = roll_oco_orders(client, symbol_order)
+        if oco_order != {}:
+            print('OCO orders are rolled: ' + str(oco_order))
+            telegram_bot_sendtext('OCO orders are rolled: ' + str(oco_order))
 
     for index, strategy in df_strategies.iterrows():
         interval = strategy['Interval']
@@ -141,13 +156,7 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
         create_orders = bool(strategy['CreateOrders'])
         buy_amount = float(strategy['BuyAmount'])
         sell_amount = float(strategy['SellAmount'])
-        oco_rolling = bool(strategy['OCORolling'])
-
-        if oco_rolling:
-            oco_order = roll_oco_orders(client, symbol_order)
-            if oco_order != {}:
-                print('OCO orders are rolled: ' + str(oco_order))
-                telegram_bot_sendtext('OCO orders are rolled: ' + str(oco_order))
+        oco_strategy = bool(strategy['OCOStrategy'])
 
         message = ''
 
@@ -175,13 +184,17 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
                             order = create_market_order(client, symbol_order, side, quote_balance)
                             message = 'Buy order sent: ' + str(order)
                             print(message)
-                            if oco_rolling:
+
+                            if oco_strategy:
+                                    # TODO create a param to this
+                                    # number of candles to get min price
+                                    num_candles_min_price = 5
                                     # get buy value
                                     buy_value = get_round_value(pd.DataFrame(order['fills'])['price'].astype('float').mean(), 
                                         float(trade_info_dict['min_price']))
                                     quantity = float(order['executedQty'])
                                     # stop = get min low value of last 5 candles
-                                    stop_value = get_round_value(df_trade[-5:]['LowPrice'].min(), float(trade_info_dict['min_price']))
+                                    stop_value = get_round_value(df_trade[-num_candles_min_price:]['LowPrice'].min(), float(trade_info_dict['min_price']))
                                     # price = buy value + (2 * (buy value - stop))
                                     price_value = buy_value + (2 * (buy_value - stop_value))
                                     price_value = get_round_value(price_value, float(trade_info_dict['min_price']))
