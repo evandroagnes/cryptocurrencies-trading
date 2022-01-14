@@ -156,12 +156,10 @@ def create_market_order(client, symbol, side, quantity):
     return order
 
 def create_oco_order(client, symbol, side, quantity, stop_price, price):
-    order = {}
-    
+    order = {}  
     if side == 'BUY':
         print('BUY is not implemented yet!')
     elif side == 'SELL':
-        """         
         try:
             order = client.create_oco_order(
                 symbol=symbol,
@@ -175,8 +173,7 @@ def create_oco_order(client, symbol, side, quantity, stop_price, price):
             # error handling
             print(e)
             raise
-        """
-        order = 'Create an oco order (quantity: ' + str(quantity) + ', stop: ' + str(stop_price) + ', price: ' + str(price) + ')'
+        #order = 'Create an oco order (quantity: ' + str(quantity) + ', stop: ' + str(stop_price) + ', price: ' + str(price) + ')'
     else:
         # TODO handle wrong side
         print('Wrong side, must be \'BUY\' or \'SELL\'! ' + side)
@@ -184,17 +181,16 @@ def create_oco_order(client, symbol, side, quantity, stop_price, price):
     return order
 
 def cancel_order(client, symbol, order_id):
-    """
+    result = {}
     try:
         result =  client.cancel_order(symbol=symbol, orderId=order_id)
     except BinanceAPIException as e:
         # error handling
         print(e)
         raise
-
+    
+    # result = str(order_id)
     return result
-    """
-    return str(order_id)
 
 def get_asset_balance(client, asset):
     balance = client.get_asset_balance(asset=asset)
