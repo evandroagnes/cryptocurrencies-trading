@@ -117,7 +117,7 @@ def roll_oco_orders(client, symbol):
                         # cancel old orders
                         result = cancel_order(client=client,
                             symbol=symbol,
-                            orderId=order_id_stop)
+                            order_id=order_id_stop)
                         print(result)
 
                         # recreate order with increment value
