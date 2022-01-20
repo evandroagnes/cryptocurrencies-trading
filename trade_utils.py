@@ -106,37 +106,47 @@ def roll_oco_orders(client, symbol):
                 # get current symbol price
                 current_price = get_lastest_price(client, symbol)
 
+                order_id_stop = [order['orderId'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0]
+                quantity = float([order['origQty'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0])
+                stop_price = float([order['stopPrice'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0])
+                limit_stop_price = float([order['price'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0])
+                limit_price = float([order['price'] for order in orders_by_list_id if order['type'] == 'LIMIT_MAKER'][0])
                 side = [order['side'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0]
-                if side == 'SELL':
-                    order_id_stop = [order['orderId'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0]
-                    quantity = float([order['origQty'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0])
-                    stop_price = float([order['stopPrice'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0])
-                    limit_stop_price = float([order['price'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0])
-                    limit_price = float([order['price'] for order in orders_by_list_id if order['type'] == 'LIMIT_MAKER'][0])
+                trade_info = get_trade_info(client, symbol)
 
-                    trade_info = get_trade_info(client, symbol)
+                roll = False
+                new_stop_price = 0.0
+                new_limit_price = 0.0
+                if side == 'SELL':
                     increment = (limit_price - limit_stop_price) / 3
                     increment = get_round_value(increment, float(trade_info['min_price']))
-
-                    if (current_price > (limit_price - increment)):
-                        # cancel old orders
-                        result = cancel_order(client=client,
-                            symbol=symbol,
-                            order_id=order_id_stop)
-                        print(result)
-
-                        # recreate order with increment value
-                        order = create_oco_order(
-                            client=client,
-                            symbol=symbol,
-                            side=SIDE_SELL,
-                            quantity=quantity,
-                            stop_price=stop_price + increment,
-                            price=limit_price + increment)
-                        
-                        print(order)
+                    roll = current_price > (limit_price - increment)
+                    new_stop_price = stop_price + increment
+                    new_limit_price = limit_price + increment
                 elif side == 'BUY':
-                    print('BUY is not implemented yet!')
+                    increment = (limit_stop_price - limit_price) / 3
+                    increment = get_round_value(increment, float(trade_info['min_price']))
+                    roll = current_price < (limit_price + increment)
+                    new_stop_price = stop_price - increment
+                    new_limit_price = limit_price - increment
+
+                if roll:
+                    # cancel old orders
+                    result = cancel_order(client=client,
+                        symbol=symbol,
+                        order_id=order_id_stop)
+                    print(result)
+
+                    # recreate order with increment value
+                    order = create_oco_order(
+                        client=client,
+                        symbol=symbol,
+                        side=side,
+                        quantity=quantity,
+                        stop_price=new_stop_price,
+                        price=new_limit_price)
+                    
+                    print(order)
     
     return order
 

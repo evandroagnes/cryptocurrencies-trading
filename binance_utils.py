@@ -33,7 +33,7 @@ def get_credentials(test=False):
 def init():
     api_key, api_secret = get_credentials()
 
-    return Client(api_key, api_secret)
+    return Client(api_key, api_secret, {"timeout": 15})
 
 def init_test():
     api_key, api_secret = get_credentials(test=True)
@@ -156,27 +156,22 @@ def create_market_order(client, symbol, side, quantity):
     return order
 
 def create_oco_order(client, symbol, side, quantity, stop_price, price):
-    order = {}  
-    if side == 'BUY':
-        print('BUY is not implemented yet!')
-    elif side == 'SELL':
-        try:
-            order = client.create_oco_order(
-                symbol=symbol,
-                side=side,
-                stopLimitTimeInForce=TIME_IN_FORCE_GTC,
-                quantity=quantity,
-                stopPrice=stop_price,
-                stopLimitPrice=stop_price,
-                price=price)
-        except BinanceAPIException as e:
-            # error handling
-            print(e)
-            raise
-        #order = 'Create an oco order (quantity: ' + str(quantity) + ', stop: ' + str(stop_price) + ', price: ' + str(price) + ')'
-    else:
-        # TODO handle wrong side
-        print('Wrong side, must be \'BUY\' or \'SELL\'! ' + side)
+    order = {}
+    try:
+        order = client.create_oco_order(
+            symbol=symbol,
+            side=side,
+            stopLimitTimeInForce=TIME_IN_FORCE_GTC,
+            quantity=quantity,
+            stopPrice=stop_price,
+            stopLimitPrice=stop_price,
+            price=price)
+    except BinanceAPIException as e:
+        # error handling
+        print(e)
+        raise
+
+    #order = 'Create an oco order (quantity: ' + str(quantity) + ', stop: ' + str(stop_price) + ', price: ' + str(price) + ')'
     
     return order
 
@@ -188,8 +183,8 @@ def cancel_order(client, symbol, order_id):
         # error handling
         print(e)
         raise
-    
-    # result = str(order_id)
+
+    #result = 'Order canceled: ' + str(order_id)
     return result
 
 def get_asset_balance(client, asset):
@@ -239,4 +234,5 @@ def get_lastest_price(client, symbol):
     return float(btc_price['price'])
 
 def get_open_orders(client, symbol):
+    #client.get_open_orders(symbol=symbol, requests_params={'timeout': 5})
     return client.get_open_orders(symbol=symbol)
