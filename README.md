@@ -38,6 +38,8 @@ Create a .cfg file named `config.yml` based on `config.yml.example`, then update
     **quote_asset_order**: List of quote assets to create orders. The logic is the same as 'base_asset_order'. Example: ['USDT', 'USDT']
 
     **live_trade**: live or test trade: 0 - False, 1 - True. Be careful with this parameter.
+    
+    **roll_oco_orders**: recreate oco orders with new values when they are going to come closer to the limit price: 0 - False, 1 - True.
 
 - api_creds:
 
