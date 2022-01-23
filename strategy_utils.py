@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.lib.type_check import mintypecode
 import pandas as pd
 
 def remove_repeated_values(values):
@@ -101,10 +100,18 @@ def get_rsi_return_signal(signal, overbought_value=70.0, oversold_value=30.0, bu
 
     return signal
 
-def get_inverted_rsi_signal(signal, overbought_value=70.0, buy_first=True):
+def get_inverted_rsi_signal(signal, overbought_value=70.0, oversold_value=30.0, buy_first=True):
+    """
+    Buy when overbought begins (signal >= overbought_value) and sell when signal returns to a value below overbought_value.
+    Sell when oversold begins (signal <= oversold_value) and buy when signal returns to a value above oversold_value.
+    """
+
     signal.columns = ['value']
     signal[(signal >= overbought_value) & (signal.shift() < overbought_value)] = 1.0
     signal[(signal < overbought_value) & (signal.shift() >= overbought_value)] = -1.0
+
+    signal[(signal <= oversold_value) & (signal.shift() > oversold_value)] = -1.0
+    signal[(signal > oversold_value) & (signal.shift() <= oversold_value)] = 1.0
 
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
     
@@ -203,31 +210,6 @@ def get_sma_macd_signal(price_data, short_data, long_data, macd_data, buy_first=
 
     return signal
 
-def get_rsi_plus_signal(signal, buy_first=True):
-    """ 
-    - 
-    """
-    signal = signal.copy()
-    signal.columns = ['value']
-    long = False
-    for i in range(1, signal.size):
-        if signal.iloc[i-1]['value'] > 70 and signal.iloc[i]['value'] <= 70 and long:
-            signal.iloc[i] = -1.0
-            long = False
-        
-        if signal.iloc[i-1]['value'] < 30 and signal.iloc[i]['value'] >= 30 and not long:
-            signal.iloc[i] = 1.0
-            long = True
-    
-    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
-
-    if buy_first:
-        signal.iloc[0]['value'] = 1.0
-
-    signal = remove_repeated_signal(signal, 'value')
-
-    return signal
-
 def get_adx_macd_signal(macd, di_plus, di_minus, adx, buy_first=True):
     """
     Buy Entry Rules:
@@ -292,8 +274,25 @@ def get_rsi_bbands_signal(price_data, upper_band, lower_band, rsi, buy_first=Tru
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
 
     #buy/sell next trading day
-    signal = signal.shift()
-    signal = signal.fillna(0)
+    #signal = signal.shift()
+    #signal = signal.fillna(0)
+
+    if buy_first:
+        signal.iloc[0]['value'] = 1.0
+
+    signal = remove_repeated_signal(signal, 'value')
+
+    return signal
+
+def get_dmi_signal(di_plus, di_minus, adx, adx_value=25.0, buy_first=True):
+    di_plus.columns = ['value']
+    di_minus.columns = ['value']
+    adx.columns = ['value']
+
+    signal = adx.copy()
+    signal[(di_plus > di_minus) & (adx >= adx_value) & (di_plus > di_plus.shift())] = 1.0
+    signal[(di_plus < di_minus) & (adx >= adx_value) & (di_minus > di_minus.shift())] = -1.0
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
 
     if buy_first:
         signal.iloc[0]['value'] = 1.0
