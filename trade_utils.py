@@ -119,13 +119,13 @@ def roll_oco_orders(client, symbol):
                 new_limit_price = 0.0
                 if side == 'SELL':
                     increment = (limit_price - limit_stop_price) / 3
-                    increment = get_round_value(increment, float(trade_info['min_price']))
+                    increment = get_trunc_value(increment, float(trade_info['min_price']))
                     roll = current_price > (limit_price - increment)
                     new_stop_price = stop_price + increment
                     new_limit_price = limit_price + increment
                 elif side == 'BUY':
                     increment = (limit_stop_price - limit_price) / 3
-                    increment = get_round_value(increment, float(trade_info['min_price']))
+                    increment = get_trunc_value(increment, float(trade_info['min_price']))
                     roll = current_price < (limit_price + increment)
                     new_stop_price = stop_price - increment
                     new_limit_price = limit_price - increment
@@ -192,7 +192,7 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
                         # Get quote_asset balance
                         quote_balance, _ = get_asset_balance(client, quote_asset)
                         quote_balance = quote_balance * buy_amount
-                        quote_balance = get_round_value(quote_balance, float(trade_info_dict['tick_size']))
+                        quote_balance = get_trunc_value(quote_balance, float(trade_info_dict['tick_size']))
                         print(symbol_order + ' quantity to buy: ' + str(quote_balance))
 
                         if quote_balance > float(trade_info_dict['quote_asset_min_value']):
@@ -205,14 +205,14 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
                                     # number of candles to get min price
                                     num_candles_min_price = 5
                                     # get buy value
-                                    buy_value = get_round_value(pd.DataFrame(order['fills'])['price'].astype('float').mean(), 
+                                    buy_value = get_trunc_value(pd.DataFrame(order['fills'])['price'].astype('float').mean(), 
                                         float(trade_info_dict['min_price']))
                                     quantity = float(order['executedQty'])
                                     # stop = get min low value of last 5 candles
-                                    stop_value = get_round_value(df_trade[-num_candles_min_price:]['LowPrice'].min(), float(trade_info_dict['min_price']))
+                                    stop_value = get_trunc_value(df_trade[-num_candles_min_price:]['LowPrice'].min(), float(trade_info_dict['min_price']))
                                     # price = buy value + (2 * (buy value - stop))
                                     price_value = buy_value + (2 * (buy_value - stop_value))
-                                    price_value = get_round_value(price_value, float(trade_info_dict['min_price']))
+                                    price_value = get_trunc_value(price_value, float(trade_info_dict['min_price']))
                                     # create OCO order to sell
                                     oco_order = create_oco_order(
                                         client=client,
@@ -236,9 +236,9 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
                         balance, _ = get_asset_balance(client, base_asset)
                         #balance = balance * (1.0 - fee)
                         qty = balance * sell_amount
-                        qty = get_round_value(qty, float(trade_info_dict['base_asset_step_size']))
+                        qty = get_trunc_value(qty, float(trade_info_dict['base_asset_step_size']))
                         if qty > balance:
-                            qty = get_round_value(qty - float(trade_info_dict['base_asset_step_size']), float(trade_info_dict['base_asset_step_size']))
+                            qty = get_trunc_value(qty - float(trade_info_dict['base_asset_step_size']), float(trade_info_dict['base_asset_step_size']))
                             
                         print(symbol_order + ' quantity to sell: ' + str(qty))
 

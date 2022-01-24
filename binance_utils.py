@@ -4,7 +4,6 @@ from datetime import datetime
 from binance.client import Client
 from binance import ThreadedWebsocketManager
 from binance.exceptions import BinanceAPIException, BinanceOrderException
-from binance.helpers import round_step_size
 from binance.enums import *
 
 """ To read a cfg file
@@ -16,6 +15,14 @@ config.read_file(open('<path-to-your-config-file>'))
 actual_api_key = config.get('BINANCE', 'ACTUAL_API_KEY')
 actual_secret_key = config.get('BINANCE', 'ACTUAL_SECRET_KEY')
  """
+
+def get_trunc_value(value, precision):
+    """
+    Trunc value at decimal point passed as parameter. Not round.
+    Ex.: trunc(5.999, 0.01) returns 5.99, not 6.00.
+    """
+    decimal_points = int(str(precision).split('.')[1].find('1')) + 1
+    return float(str(value).split('.')[0] + "." + str(value).split('.')[1][0:decimal_points])
 
 def get_credentials(test=False):
     with open("config.yml", 'r') as ymlfile:
@@ -224,9 +231,6 @@ def get_trade_info(client, symbol):
             'base_asset_step_size': base_asset_step_size,
             'quote_asset_min_value': quote_asset_min_value,
             'exchange_fee': 0.001}
-
-def get_round_value(value, precision):
-    return round_step_size(value, precision)
 
 def get_lastest_price(client, symbol):
     btc_price = client.get_symbol_ticker(symbol=symbol)
