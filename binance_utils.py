@@ -21,8 +21,14 @@ def get_trunc_value(value, precision):
     Trunc value at decimal point passed as parameter. Not round.
     Ex.: trunc(5.999, 0.01) returns 5.99, not 6.00.
     """
-    decimal_points = int(str(precision).split('.')[1].find('1')) + 1
-    return float(str(value).split('.')[0] + "." + str(value).split('.')[1][0:decimal_points])
+    value = '{:0.8f}'.format(value)
+    precision = '{:0.8f}'.format(precision)
+
+    if (float(precision) >= 1) | (precision.split('.')[1].find('1') < 0):
+        return float(value.split('.')[0])
+    else:
+        decimal_points = int(precision.split('.')[1].find('1')) + 1
+        return float(value.split('.')[0] + "." + value.split('.')[1][0:decimal_points])
 
 def get_credentials(test=False):
     with open("config.yml", 'r') as ymlfile:
