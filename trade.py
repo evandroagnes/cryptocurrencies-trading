@@ -38,8 +38,9 @@ else:
     client = init_test()
     print('Test Trade...')
 
-twm = get_twm()
 symbol_data = {}
+twm_sockets = {}
+twm = get_twm()
 
 def handle_socket_message(msg):
     #print(f"message type: {msg['e']}")
@@ -98,15 +99,37 @@ def print_last_candle():
     for key in symbol_data:
         print('{}: {:%Y-%m-%d %H:%M:%S} ClosePrice: {:0.8f}'.format(key, symbol_data[key].index[-1], symbol_data[key]['ClosePrice'][-1]))
 
+def exit_trade():
+    global twm_sockets
+
+    print_last_candle()
+    print('Exiting the program and stopping all processes.')
+    
+    # close sockets
+    for key in twm_sockets:
+        print('stoping ' + key + ' socket...')
+        twm.stop_socket(twm_sockets[key])
+    twm_sockets = {}
+
+    sleep(3)
+
+    # close connection
+    twm.stop()
+    sys.exit('Finished and exiting.')
+
 def main(mode):
+    global symbol_data
+    global twm_sockets
+
     try:
         twm.start()
-        print('Trade started...')
+        print('Wait for trade start...')
 
         for symbol in symbol_list:
             symbol_data[symbol] = get_data(client, symbol, interval)
-            twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
-    
+            twm_sockets[symbol] = twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
+
+        print('Trade started...')
         while 1:
             if mode == 1:
                 selection = input('Your selection? (h for help) ')
@@ -119,21 +142,13 @@ def main(mode):
                     print('\n\t e : exit')
                     print('\n\t p : print last candles')
                 elif selection == 'e':
-                    print('Exiting the program and stopping all processes.')
-                    # close connection
-                    twm.stop()
-                    sys.exit('Finished and exiting.')
+                    exit_trade()
                 elif selection == 'p':
                     print_last_candle()
                 else:
                     print('Unknown option.')
     except KeyboardInterrupt:
-        print_last_candle()
-        
-        print('Exiting the program and stopping all processes.')
-        # close connection
-        twm.stop()
-        sys.exit('Finished and exiting.')
+        exit_trade()
 
 if __name__ == "__main__":   
     main(mode)
