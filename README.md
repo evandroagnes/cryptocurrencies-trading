@@ -70,6 +70,7 @@ Update `data\trade-strategies.csv` with your strategies. Be careful with `Create
 - CreateOrders: 0 - only send a message, 1 - create orders also.
 - BuyAmount: percent of value to buy 1.0 = 100%.
 - SellAmount: percent of value to sell 1.0 = 100%.
+- OCOStrategy: 0 - don't create an oco order automatically with the oposite side; 1 - create an oco order in addiction to an order created by strategy.
 - Message: message that was sent when the signal to sell or buy is reached.
 
 **Run**
