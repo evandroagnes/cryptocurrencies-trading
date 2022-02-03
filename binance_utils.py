@@ -131,13 +131,6 @@ def get_crypto_data(client, pair, interval, timestamp):
 
     return df_crypto
 
-""" Some of the helper functions from python-binance api:
-    order_limit_buy()
-    order_limit_sell()
-    order_market_buy()
-    order_market_sell()
-    order_oco_buy()
-    order_oco_sell() """
 def create_market_order(client, symbol, side, quantity):
     """ Create a market order in binance.
 
@@ -226,6 +219,9 @@ def get_trade_info(client, symbol):
             base_asset_step_size = filter['stepSize']
         elif filter['filterType'] == 'MIN_NOTIONAL':
             quote_asset_min_value = filter['minNotional']
+        elif filter['filterType'] == 'MARKET_LOT_SIZE':
+            market_min_qty = filter['minQty']
+            market_max_qty = filter['maxQty']
 
     return {'base_asset_precision': base_asset_precision, 
             'quote_asset_precision': quote_asset_precision,
@@ -236,12 +232,40 @@ def get_trade_info(client, symbol):
             'base_asset_max_qty': base_asset_max_qty,
             'base_asset_step_size': base_asset_step_size,
             'quote_asset_min_value': quote_asset_min_value,
-            'exchange_fee': 0.001}
+            'market_min_qty': market_min_qty,
+            'market_max_qty': market_max_qty,
+            'exchange_fee': 0.00075}
 
 def get_lastest_price(client, symbol):
+    """
+    Get symbol lastest price.
+    """
     btc_price = client.get_symbol_ticker(symbol=symbol)
     
     return float(btc_price['price'])
+
+def get_all_symbols(client):
+    """
+    Returns a DataFrame with all pair symbols in the exchange with TRADING status:
+    Status	    Can trade?	Can cancel order?	Market data generated?
+    TRADING		yes		    yes			        yes
+    END_OF_DAY	no		    yes			        no
+    HALT		no		    yes			        yes
+    BREAK		no		    yes			        no
+
+    https://dev.binance.vision/t/explanation-on-symbol-status/118
+    """
+    exchange_info = client.get_exchange_info()
+    symbols_df = pd.DataFrame(exchange_info['symbols'])
+    symbols_df = symbols_df[symbols_df['status'] == 'TRADING']
+    return symbols_df[['symbol', 'baseAsset', 'quoteAsset', 'status']].set_index('symbol')
+
+def get_all_lastest_price(client):
+    """
+    Get lastest price from all tickers.
+    """
+    prices_df = pd.DataFrame(client.get_all_tickers())
+    return prices_df.set_index('symbol')
 
 def get_open_orders(client, symbol):
     #client.get_open_orders(symbol=symbol, requests_params={'timeout': 5})

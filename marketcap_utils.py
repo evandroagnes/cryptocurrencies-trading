@@ -30,7 +30,9 @@ def get_coinmarketcap_data(num_pages=1):
         data = json.loads(data.contents[0])
         # get only cryptocurrencies data
         coin_columns = data['props']['initialState']['cryptocurrency']['listingLatest']['data'][0]['keysArr']
-        coin_data = np.array(data['props']['initialState']['cryptocurrency']['listingLatest']['data'][1:])[:,:-1]
+        num_columns = len(coin_columns)
+        coin_data = np.array(data['props']['initialState']['cryptocurrency']['listingLatest']['data'][1:], dtype=object)[:,:num_columns]
+
         df = pd.DataFrame(coin_data, columns=coin_columns)
 
         df = df[['symbol', 
@@ -41,7 +43,7 @@ def get_coinmarketcap_data(num_pages=1):
                 'quote.USD.percentChange1h', 
                 'quote.USD.percentChange24h',
                 'quote.USD.percentChange7d']]
-
         df_coinmarketcap = df_coinmarketcap.append(df)
 
-    return df_coinmarketcap
+    df_coinmarketcap = df_coinmarketcap.rename(columns={'symbol' : 'coin'})
+    return df_coinmarketcap.set_index('coin')
