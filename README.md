@@ -62,7 +62,7 @@ Create a .cfg file named `config.yml` based on `config.yml.example`, then update
 
 **Create trade strategies:**
 
-Update `data\trade-strategies.csv` with your strategies. Be careful with `CreateOrders` column!
+Update `trade-strategies.csv` with your strategies. Be careful with `CreateOrders` column!
 
 - Symbol: symbol to trade and calculate statistics/strategy;
 - Interval: strategy interval;
@@ -84,5 +84,5 @@ python trade.py
 There are also some jupyter notebooks to perform analysis, backtesting and predictions:
 
 - cryptocurrencies_analysis: price analysis and backtesting on strategies;
-- cryptocurrencies_ml: a base machine learning model;
+- cryptocurrencies_ml: a basic machine learning model;
 - cryptocurrencies_alts: comparative altcoins analysis;
