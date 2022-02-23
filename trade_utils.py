@@ -155,7 +155,7 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
     symbol_order = base_asset + quote_asset
 
     # Read every call because the strategy can be changed in the file.
-    df_strategies = pd.read_csv('trade-strategies.csv')
+    df_strategies = pd.read_csv('trading-strategies.csv')
     df_strategies = df_strategies[df_strategies['Symbol'] == symbol]
 
     if oco_rolling:
