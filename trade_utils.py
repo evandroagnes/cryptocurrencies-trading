@@ -40,6 +40,7 @@ def resample_data(df, time_resample):
     return df_resample
 
 def generate_technical_indicators(df):
+    df['SMA10'] = get_sma(df['ClosePrice'], 10)
     df['SMA20'] = get_sma(df['ClosePrice'], 20)
     df['SMA30'] = get_sma(df['ClosePrice'], 30)
     df['SMA50'] = get_sma(df['ClosePrice'], 50)
@@ -56,7 +57,9 @@ def generate_technical_indicators(df):
 def update_signal_by_strategy(df, signal_column):
     df = generate_technical_indicators(df)
 
-    if signal_column == 'Signal20SMAStrategy':
+    if signal_column == 'Signal10SMAStrategy':
+        df['Signal10SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA10']].copy())
+    elif signal_column == 'Signal20SMAStrategy':
         df['Signal20SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA20']].copy())
     elif signal_column == 'Signal30SMAStrategy':
         df['Signal30SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA30']].copy())
@@ -89,6 +92,8 @@ def update_signal_by_strategy(df, signal_column):
         df['SignalBBandsStrategy'] = get_bbands_signal(df[['ClosePrice']].copy(), 
                                                        df[['UpperBBand']].copy(), 
                                                        df[['LowerBBand']].copy())
+    elif signal_column == 'SignalInvertedRSIStrategy':
+        df['SignalInvertedRSIStrategy'] = get_inverted_rsi_signal(df[['RSI']].copy())
 
     return df
 
