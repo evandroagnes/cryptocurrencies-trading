@@ -88,3 +88,4 @@ There are also some jupyter notebooks to perform analysis, backtesting and predi
 - cryptocurrencies_analysis: price analysis and backtesting on strategies;
 - cryptocurrencies_ml: a basic machine learning model;
 - cryptocurrencies_alts: comparative altcoins analysis;
+- cryptocurrencies_arbitrage.ipynb: profitable arbitrage scan.
