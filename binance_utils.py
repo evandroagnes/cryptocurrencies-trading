@@ -1,6 +1,7 @@
 import pandas as pd
 import yaml
 from datetime import datetime
+from urllib3.exceptions import ReadTimeoutError
 from binance.client import Client
 from binance import ThreadedWebsocketManager
 from binance.exceptions import BinanceAPIException, BinanceOrderException
@@ -15,20 +16,6 @@ config.read_file(open('<path-to-your-config-file>'))
 actual_api_key = config.get('BINANCE', 'ACTUAL_API_KEY')
 actual_secret_key = config.get('BINANCE', 'ACTUAL_SECRET_KEY')
  """
-
-def get_trunc_value(value, precision):
-    """
-    Trunc value at decimal point passed as parameter. Not round.
-    Ex.: trunc(5.999, 0.01) returns 5.99, not 6.00.
-    """
-    value = '{:0.8f}'.format(value)
-    precision = '{:0.8f}'.format(precision)
-
-    if (float(precision) >= 1) | (precision.split('.')[1].find('1') < 0):
-        return float(value.split('.')[0])
-    else:
-        decimal_points = int(precision.split('.')[1].find('1')) + 1
-        return float(value.split('.')[0] + "." + value.split('.')[1][0:decimal_points])
 
 def get_credentials(test=False):
     with open("config.yml", 'r') as ymlfile:
@@ -55,6 +42,20 @@ def init_test():
     client.API_URL = 'https://testnet.binance.vision/api'
 
     return client
+
+def get_trunc_value(value, precision):
+    """
+    Trunc value at decimal point passed as parameter. Not round.
+    Ex.: trunc(5.999, 0.01) returns 5.99, not 6.00.
+    """
+    value = '{:0.8f}'.format(value)
+    precision = '{:0.8f}'.format(precision)
+
+    if (float(precision) >= 1) | (precision.split('.')[1].find('1') < 0):
+        return float(value.split('.')[0])
+    else:
+        decimal_points = int(precision.split('.')[1].find('1')) + 1
+        return float(value.split('.')[0] + "." + value.split('.')[1][0:decimal_points])
 
 def get_last_timestamp_from(df):
     if df.size > 0:
@@ -265,8 +266,14 @@ def get_all_lastest_price(client):
     Get lastest price from all tickers.
     """
     prices_df = pd.DataFrame(client.get_all_tickers())
-    return prices_df.set_index('symbol')
+    prices_df.set_index('symbol', inplace=True)
+    #prices_df['price'] = prices_df['price'].astype('float')
+    return prices_df
 
 def get_open_orders(client, symbol):
-    #client.get_open_orders(symbol=symbol, requests_params={'timeout': 5})
-    return client.get_open_orders(symbol=symbol)
+    try:
+        #client.get_open_orders(symbol=symbol, requests_params={'timeout': 5})
+        return client.get_open_orders(symbol=symbol)
+    except ReadTimeoutError as e:
+        print(e)
+        raise
