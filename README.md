@@ -68,8 +68,10 @@ Update `trade-strategies.csv` with your strategies. Be careful with `CreateOrder
 - Interval: strategy interval;
 - SignalColumnName: column name in the dataframe that has the signal to buy or sell. See the function `update_signal_by_strategy` in the `trade_utils.py` file what strategies can be used.
 - CreateOrders: 0 - only send a message, 1 - create orders also.
-- BuyAmount: percent of value to buy 1.0 = 100%.
-- SellAmount: percent of value to sell 1.0 = 100%.
+- IsPercentBuy: 0 - buy amount in value, 1 - buy amount in percentual.
+- BuyAmount: value to buy, if percent, value to buy 1.0 = 100%.
+- IsPercentSell: 0 - sell amount in value, 1 - sell amount in percentual.
+- SellAmount: value to sell, if percent, value to sell 1.0 = 100%.
 - OCOStrategy: 0 - don't create an oco order automatically with the oposite side; 1 - create an oco order in addiction to an order created by strategy.
 - Message: message that was sent when the signal to sell or buy is reached.
 
