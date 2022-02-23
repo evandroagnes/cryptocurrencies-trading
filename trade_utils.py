@@ -169,7 +169,9 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
         message_strategy = strategy['Message']
         signal_column = strategy['SignalColumnName']
         create_orders = bool(strategy['CreateOrders'])
+        is_percent_buy = bool(strategy['IsPercentBuy'])
         buy_amount = float(strategy['BuyAmount'])
+        is_percent_sell = bool(strategy['IsPercentSell'])
         sell_amount = float(strategy['SellAmount'])
         oco_strategy = bool(strategy['OCOStrategy'])
 
@@ -191,7 +193,11 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
                         ### BUY ORDER
                         # Get quote_asset balance
                         quote_balance, _ = get_asset_balance(client, quote_asset)
-                        quote_balance = quote_balance * buy_amount
+                        if is_percent_buy:
+                            quote_balance = quote_balance * buy_amount
+                        elif (not is_percent_buy & buy_amount < quote_balance):
+                            quote_balance = buy_amount
+                        
                         quote_balance = get_trunc_value(quote_balance, float(trade_info_dict['tick_size']))
                         print(symbol_order + ' quantity to buy: ' + str(quote_balance))
 
@@ -235,7 +241,11 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
                         # get total balance asset
                         balance, _ = get_asset_balance(client, base_asset)
                         #balance = balance * (1.0 - fee)
-                        qty = balance * sell_amount
+                        if is_percent_sell:
+                            qty = balance * sell_amount
+                        elif (not is_percent_sell & sell_amount < balance):
+                            qty = sell_amount
+
                         qty = get_trunc_value(qty, float(trade_info_dict['base_asset_step_size']))
                         if qty > balance:
                             qty = get_trunc_value(qty - float(trade_info_dict['base_asset_step_size']), float(trade_info_dict['base_asset_step_size']))

@@ -1,3 +1,3 @@
-Symbol,Interval,SignalColumnName,CreateOrders,BuyAmount,SellAmount,OCOStrategy,Message
-BTCUSDT,1D,Signal30SMAStrategy,0,1.0,1.0,0,SMA 30 signal crossed
-ENJBTC,1H,SignalMACDStrategy,0,0.5,1.0,0,MACD signal crossed
+Symbol,Interval,SignalColumnName,CreateOrders,IsPercentBuy,BuyAmount,IsPercentSell,SellAmount,OCOStrategy,Message
+BTCUSDT,1D,Signal30SMAStrategy,0,1,1.0,1,1.0,0,SMA 30 signal crossed
+ETHBTC,1H,SignalMACDStrategy,0,1,0.5,1,1.0,0,MACD signal crossed
