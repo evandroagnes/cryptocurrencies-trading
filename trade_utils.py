@@ -200,7 +200,7 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
                         quote_balance, _ = get_asset_balance(client, quote_asset)
                         if is_percent_buy:
                             quote_balance = quote_balance * buy_amount
-                        elif (not is_percent_buy & buy_amount < quote_balance):
+                        elif (not is_percent_buy and buy_amount < quote_balance):
                             quote_balance = buy_amount
                         
                         quote_balance = get_trunc_value(quote_balance, float(trade_info_dict['tick_size']))
@@ -248,7 +248,7 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
                         #balance = balance * (1.0 - fee)
                         if is_percent_sell:
                             qty = balance * sell_amount
-                        elif (not is_percent_sell & sell_amount < balance):
+                        elif (not is_percent_sell and sell_amount < balance):
                             qty = sell_amount
 
                         qty = get_trunc_value(qty, float(trade_info_dict['base_asset_step_size']))
