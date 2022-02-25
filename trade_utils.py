@@ -71,6 +71,8 @@ def update_signal_by_strategy(df, signal_column):
         df['SignalMACDStrategy'] = get_macd_signal(df[['MACDSignal']].copy(), df[['MACD']].copy())
     elif signal_column == 'SignalRSIStrategy':
         df['SignalRSIStrategy'] = get_rsi_signal(df[['RSI']].copy())
+    elif signal_column == 'SignalRSIStrategy65_35':
+        df['SignalRSIStrategy65_35'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=65, oversold_value=35)
     elif signal_column == 'SignalRSIADXStrategy':
         df['SignalRSIADXStrategy'] = get_rsi_adx_signal(df[['RSI']].copy(), 
                                                         df[['ADX']].copy(), 
