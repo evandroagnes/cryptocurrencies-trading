@@ -122,20 +122,25 @@ def roll_oco_orders(client, symbol):
                 trade_info = get_trade_info(client, symbol)
 
                 roll = False
-                new_stop_price = 0.0
                 new_limit_price = 0.0
+                new_stop_price = 0.0
+                new_stop_limit_price = 0.0
                 if side == 'SELL':
                     increment = (limit_price - limit_stop_price) / 3
                     increment = get_trunc_value(increment, float(trade_info['min_price']))
                     roll = current_price > (limit_price - increment)
-                    new_stop_price = stop_price + increment
+                    #SELL = stop > limit_stop
                     new_limit_price = limit_price + increment
+                    new_stop_price = (stop_price + increment) * 1.001
+                    new_stop_limit_price = stop_price + increment
                 elif side == 'BUY':
                     increment = (limit_stop_price - limit_price) / 3
                     increment = get_trunc_value(increment, float(trade_info['min_price']))
                     roll = current_price < (limit_price + increment)
-                    new_stop_price = stop_price - increment
                     new_limit_price = limit_price - increment
+                    #BUY = limit_stop > stop
+                    new_stop_price = stop_price - increment
+                    new_stop_limit_price = (stop_price - increment) * 1.001
 
                 if roll:
                     # cancel old orders
@@ -151,6 +156,7 @@ def roll_oco_orders(client, symbol):
                         side=side,
                         quantity=quantity,
                         stop_price=new_stop_price,
+                        stop_limit_price=new_stop_limit_price,
                         price=new_limit_price)
                     
                     print(order)
@@ -232,7 +238,8 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
                                         symbol=symbol_order,
                                         side='SELL',
                                         quantity=quantity,
-                                        stop_price=stop_value,
+                                        stop_price=stop_value * 1.001,
+                                        stop_limit_price=stop_value,
                                         price=price_value)
 
                                     print('OCO order sent: ' + str(oco_order))

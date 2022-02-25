@@ -162,7 +162,7 @@ def create_market_order(client, symbol, side, quantity):
     
     return order
 
-def create_oco_order(client, symbol, side, quantity, stop_price, price):
+def create_oco_order(client, symbol, side, quantity, stop_price, stop_limit_price, price):
     order = {}
     try:
         order = client.create_oco_order(
@@ -171,7 +171,7 @@ def create_oco_order(client, symbol, side, quantity, stop_price, price):
             stopLimitTimeInForce=TIME_IN_FORCE_GTC,
             quantity=quantity,
             stopPrice='{:0.8f}'.format(stop_price),
-            stopLimitPrice='{:0.8f}'.format(stop_price),
+            stopLimitPrice='{:0.8f}'.format(stop_limit_price),
             price='{:0.8f}'.format(price))
     except BinanceAPIException as e:
         # error handling
