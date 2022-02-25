@@ -73,7 +73,7 @@ def get_macd_rvi_signal(signal_macd, macd_value, signal_rvi, rvi_value, buy_firs
 
     return signal 
 
-def get_rsi_signal(signal, overbought_value=70.0, oversold_value=30.0, buy_first=True):
+def get_rsi_signal(signal, overbought_value=70.0, oversold_value=30.0, buy_first=True, remove_repeated_signals=True):
     signal.columns = ['value']
     signal[signal < oversold_value] = 1.0
     signal[signal > overbought_value] = -1.0
@@ -83,7 +83,19 @@ def get_rsi_signal(signal, overbought_value=70.0, oversold_value=30.0, buy_first
     if buy_first:
         signal.iloc[0]['value'] = 1.0
 
-    signal = remove_repeated_signal(signal, 'value')
+    if remove_repeated_signals:
+        signal = remove_repeated_signal(signal, 'value')
+
+    return signal
+
+def get_rsi_enter_signal(signal, overbought_value=70.0, oversold_value=30.0, buy_first=True):
+    signal.columns = ['value']
+    signal[(signal.shift() > oversold_value) & (signal <= oversold_value)] = 1.0
+    signal[(signal.shift() < overbought_value) & (signal >= overbought_value)] = -1.0
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+    
+    if buy_first:
+        signal.iloc[0]['value'] = 1.0
 
     return signal
 
@@ -95,8 +107,6 @@ def get_rsi_return_signal(signal, overbought_value=70.0, oversold_value=30.0, bu
 
     if buy_first:
         signal.iloc[0]['value'] = 1.0
-
-    signal = remove_repeated_signal(signal, 'value')
 
     return signal
 
