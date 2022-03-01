@@ -1,6 +1,7 @@
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
+from pathlib import Path
 from binance_utils import *
 from technical_indicator_utils import get_sma, get_macd, get_rsi, get_adx, get_rvi, get_bbands
 from message_utils import telegram_bot_sendtext
@@ -168,7 +169,9 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
     symbol_order = base_asset + quote_asset
 
     # Read every call because the strategy can be changed in the file.
-    df_strategies = pd.read_csv('trading-strategies.csv')
+    path = Path(__file__).parent
+    filename = path / 'trading-strategies.csv'
+    df_strategies = pd.read_csv(filename)
     df_strategies = df_strategies[df_strategies['Symbol'] == symbol]
 
     if oco_rolling:
@@ -281,13 +284,17 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
 
 def get_data(client, pair, interval, save=True):
     save_all = False
+    path = Path(__file__).parent
+    filename = path / str('data/' + pair + '-1m-binance.parquet')
+    filename_all =  path / str('data/' + pair + '-1m-binance-all.parquet')
+
     try:
-        table = pq.read_table('data/' + pair + '-1m-binance-all.parquet')
+        table = pq.read_table(filename_all)
         df = table.to_pandas()
         save_all = True
     except FileNotFoundError:
         try:
-            table = pq.read_table('data/' + pair + '-1m-binance.parquet')
+            table = pq.read_table(filename)
             df = table.to_pandas()
         except FileNotFoundError:
             df = initialize_ohlc_df()
@@ -298,13 +305,11 @@ def get_data(client, pair, interval, save=True):
     if save:
         # save all data
         if save_all:
-            filename = 'data/' + pair + '-1m-binance-all.parquet'
             table = pa.Table.from_pandas(df)
-            pq.write_table(table, filename)
+            pq.write_table(table, filename_all)
 
         # create data file with data from 2020 until now for share (github)
         df_from_2020 = df['2020-1-1':]
-        filename = 'data/' + pair + '-1m-binance.parquet'
         table_from_2020 = pa.Table.from_pandas(df_from_2020)
         pq.write_table(table_from_2020, filename)
     

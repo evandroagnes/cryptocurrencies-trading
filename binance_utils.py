@@ -2,6 +2,7 @@ import pandas as pd
 import yaml
 from datetime import datetime
 from urllib3.exceptions import ReadTimeoutError
+from pathlib import Path
 from binance.client import Client
 from binance import ThreadedWebsocketManager
 from binance.exceptions import BinanceAPIException, BinanceOrderException
@@ -18,7 +19,9 @@ actual_secret_key = config.get('BINANCE', 'ACTUAL_SECRET_KEY')
  """
 
 def get_credentials(test=False):
-    with open("config.yml", 'r') as ymlfile:
+    path = Path(__file__).parent
+    filename = path / 'config.yml'
+    with open(filename, 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)
     
     if test:
