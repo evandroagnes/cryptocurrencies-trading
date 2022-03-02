@@ -1,6 +1,6 @@
-from os import close
 import numpy as np
 import pandas as pd
+from hurst import compute_Hc
 
 def get_sma(close_price, period):
     return close_price.rolling(period).mean()
@@ -165,23 +165,21 @@ def bband_width(upper_band, lower_band, midi_band):
 def bband_b(close_price, upper_band, lower_band):
     return ((close_price - lower_band) / (upper_band - lower_band)) * 100
 
-def get_hurst(price_data, lags_to_test=[2,20]):
+def get_hurst(price_data, window=200):
     """
     Hurst = 0.5 -> Brownian Motion (random walk)
     Hurst < 0.5 -> Mean reversion
-    Hurst > 0.5 -> Momentum
+    Hurst > 0.5 -> Momentum/Trend
 
     Reference: https://www.coursera.org/learn/machine-learning-trading-finance
     """
-    tau = []
-    lagvec = []
-    for lag in range(lags_to_test[0], lags_to_test[1]):
-        pp = np.subtract(price_data[lag:], price_data[:-lag])
-        lagvec.append(lag)
-        tau.append(np.std(pp))
-    
-    m = np.polyfit(np.log10(lagvec), np.log10(tau), 1)
-    hurst = m[0]
+    hurst = np.zeros((len(price_data), 1))
+    for i in range(0, len(price_data)):
+        if i < window:
+            hurst[i] = np.nan
+        else:
+            H, c, val = compute_Hc(price_data[i - window:i], kind='price', simplified=True)
+            hurst[i] = H
 
     return hurst
 
@@ -211,3 +209,13 @@ def get_rvi(open_price, close_price, low_price, high_price, period=10):
     signal = (rvi + rvi1 + rvi2 + rvi3) / 6
 
     return rvi, signal
+
+def get_stochastic_oscillator(close_price, low_price, high_price, period=3):
+    """
+    Reference: https://www.investopedia.com/terms/s/stochasticoscillator.asp
+    """
+
+    sok = ((close_price - low_price.rolling(14).min()) / (high_price.rolling(14).max() - low_price.rolling(14).min())) * 100
+    sod = sok.rolling(period).mean()
+
+    return sok, sod
