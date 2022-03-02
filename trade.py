@@ -129,7 +129,7 @@ def main(mode):
         print('Wait for trade start...')
 
         for symbol in symbol_list:
-            symbol_data[symbol] = get_data(client, symbol, interval)
+            symbol_data[symbol] = get_data(client, symbol, interval, save=live_trade)
             twm_sockets[symbol] = twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
 
         print('Trade started...')
