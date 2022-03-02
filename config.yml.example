@@ -10,6 +10,8 @@ params:
     quote_asset_order: ['USDT', 'USDT']
     # live or test trade: 0 - False, 1 - True
     live_trade: 0
+    # recreate oco orders based on limits
+    roll_oco_orders: 0
     # End trade parameters
 
 api_creds:
