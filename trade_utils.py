@@ -309,9 +309,9 @@ def get_data(client, pair, interval, save=True):
             pq.write_table(table, filename_all)
 
         # create data file with data from 2020 until now for share (github)
-        df_from_2020 = df['2020-1-1':]
-        table_from_2020 = pa.Table.from_pandas(df_from_2020)
-        pq.write_table(table_from_2020, filename)
+        df_from_2021 = df['2021-1-1':]
+        table_from_2021 = pa.Table.from_pandas(df_from_2021)
+        pq.write_table(table_from_2021, filename)
     
     # valid intervals - 1min, 3min, 5min, 15min, 30min, 1H, 2H, 4H, 6H, 8H, 12H, 1D, 3D, 1W, 1M
     # TODO validate input
