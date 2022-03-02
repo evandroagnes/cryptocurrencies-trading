@@ -4,6 +4,8 @@ The goal of this project is to build a parametrized bot to automate trading base
 **This is a work in progress project, not production ready.**
 
 ## Setup
+I strongly recommend to use a python virtual environment with every project that you are working to avoid problems with python and library versions. See [here](https://www.freecodecamp.org/news/how-to-manage-python-dependencies-using-virtual-environments/).
+
 **Install Python dependencies:**
 
 Run the following line in the terminal: `pip install -r requirements.txt`.
@@ -89,3 +91,9 @@ There are also some jupyter notebooks to perform analysis, backtesting and predi
 - cryptocurrencies_ml: a basic machine learning model;
 - cryptocurrencies_alts: comparative altcoins analysis;
 - cryptocurrencies_arbitrage.ipynb: profitable arbitrage scan.
+
+Don't forget to install the jupyter notebook in your environment before:
+
+```shell
+pip install notebook
+```
