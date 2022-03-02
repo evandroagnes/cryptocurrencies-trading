@@ -17,13 +17,13 @@ find_trading_process_id() {
 
 #Start trading
 start() {
-        echo "Starting process..."
+        echo `date +"%Y-%m-%d %T"` "Starting process..."
         find_trading_process_id
         if [[ "" ==  "$PID" ]]; then
                 cd $TRADING_DIR
                 nohup python3 -u $TRADING_DIR/trade.py >> $TRADING_DIR/output.log &
         else
-                echo "Trading process is already running..." $PID
+                echo `date +"%Y-%m-%d %T"` "Trading process is already running..." $PID
         fi
 }
 
@@ -31,14 +31,14 @@ start() {
 stop() {
         find_trading_process_id
         if [[ "" !=  "$PID" ]]; then
-                echo "Stopping " $PID
+                echo `date +"%Y-%m-%d %T"` "Stopping " $PID
                 kill -2 $PID
                 sleep 15
         fi
 
         find_trading_process_id
         if [[ "" !=  "$PID" ]]; then
-                echo "Killing " $PID
+                echo `date +"%Y-%m-%d %T"` "Killing " $PID
                 kill -9 $PID
                 sleep 15
         fi
