@@ -126,7 +126,7 @@ def main(mode):
 
     try:
         twm.start()
-        print('Wait for trade start...')
+        print('Wait for trading to start...')
 
         for symbol in symbol_list:
             symbol_data[symbol] = get_data(client, symbol, interval, save=live_trade)
