@@ -1,6 +1,7 @@
 import sys
 import pandas as pd
 import yaml
+from pathlib import Path
 from datetime import datetime
 from time import sleep
 
@@ -11,7 +12,9 @@ from trade_utils import get_data, process_candle
 debug = False
 
 # Trade Parameters
-with open("config.yml", 'r') as ymlfile:
+path = Path(__file__).parent
+filename = path / 'config.yml'
+with open(filename, 'r') as ymlfile:
     cfg = yaml.safe_load(ymlfile)
 
 mode = cfg['params']['mode']
