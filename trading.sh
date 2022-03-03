@@ -4,7 +4,7 @@
 # m h  dom mon dow   command
 # Restart daily at 0:00
 #0 0 * * * /home/user/trading.sh restart /home/user/cryptocurrencies-trading >> /home/user/trading.log
-# Verify if the process is still running for each 30 minutes, if not start it.
+# Verify if the process is still running in the minute 30 for each hour, if not start it.
 #30 * * * * /home/user/trading.sh start /home/user/cryptocurrencies-trading >> /home/user/trading.log
 
 OP=$1
@@ -17,9 +17,9 @@ find_trading_process_id() {
 
 #Start trading
 start() {
-        echo `date +"%Y-%m-%d %T"` "Starting process..."
         find_trading_process_id
         if [[ "" ==  "$PID" ]]; then
+                echo `date +"%Y-%m-%d %T"` "Starting process..."
                 cd $TRADING_DIR
                 nohup python3 -u $TRADING_DIR/trade.py >> $TRADING_DIR/output.log &
         else
