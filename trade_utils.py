@@ -156,8 +156,8 @@ def roll_oco_orders(client, symbol):
                         symbol=symbol,
                         side=side,
                         quantity=quantity,
-                        stop_price=new_stop_price,
-                        stop_limit_price=new_stop_limit_price,
+                        stop_price=get_trunc_value(new_stop_price, float(trade_info['min_price'])),
+                        stop_limit_price=get_trunc_value(new_stop_limit_price, float(trade_info['min_price'])),
                         price=new_limit_price)
                     
                     print(order)
