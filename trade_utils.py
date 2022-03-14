@@ -97,6 +97,8 @@ def update_signal_by_strategy(df, signal_column):
                                                        df[['LowerBBand']].copy())
     elif signal_column == 'SignalInvertedRSIStrategy':
         df['SignalInvertedRSIStrategy'] = get_inverted_rsi_signal(df[['RSI']].copy())
+    elif signal_column == 'SignalDMIStrategy':
+        df['SignalDMIStrategy'] = get_dmi_signal(df[['DI+']].copy(), df[['DI-']].copy(), df[['ADX']].copy())
 
     return df
 
