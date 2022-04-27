@@ -1,4 +1,4 @@
-# Cryptocurrencies trade bot
+# Cryptocurrencies trading bot
 The goal of this project is to build a parametrized bot to automate trading based on indicators, statistics and machine/deep/reinforce learning.
 
 **This is a work in progress project, not production ready.**
@@ -25,7 +25,7 @@ To receive messages or alerts you need a bot in Telegram. Follow [these](https:/
 
 **Create user configuration:**
 
-Create a .cfg file named `config.yml` based on `config.yml.example`, then update with your own data. The configuration file consists of the following fields:
+Create a config file named `config.yml` based on `config.yml.example`, then update with your own data. The configuration file consists of the following fields:
 
 - params:
 
