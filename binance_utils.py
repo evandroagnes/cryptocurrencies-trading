@@ -280,3 +280,11 @@ def get_open_orders(client, symbol):
     except ReadTimeoutError as e:
         print(e)
         raise
+
+def get_all_open_orders(client):
+    try:
+        #client.get_open_orders(symbol=symbol, requests_params={'timeout': 5})
+        return client.get_open_orders()
+    except ReadTimeoutError as e:
+        print(e)
+        raise

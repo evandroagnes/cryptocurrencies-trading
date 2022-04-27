@@ -70,8 +70,12 @@ def update_signal_by_strategy(df, signal_column):
         df['Signal100SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA100']].copy())
     elif signal_column == 'SignalMACDStrategy':
         df['SignalMACDStrategy'] = get_macd_signal(df[['MACDSignal']].copy(), df[['MACD']].copy())
+    elif signal_column == 'SignalRSIStrategy75_20':
+        df['SignalRSIStrategy75_25'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=75, oversold_value=20)
+    elif signal_column == 'SignalRSIStrategy75_25':
+        df['SignalRSIStrategy75_25'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=75, oversold_value=25)
     elif signal_column == 'SignalRSIStrategy70_30':
-        df['SignalRSIStrategy70_30'] = get_rsi_signal(df[['RSI']].copy())
+        df['SignalRSIStrategy70_30'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=70, oversold_value=30)
     elif signal_column == 'SignalRSIStrategy65_35':
         df['SignalRSIStrategy65_35'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=65, oversold_value=35)
     elif signal_column == 'SignalRSIStrategy60_40':
@@ -104,9 +108,9 @@ def update_signal_by_strategy(df, signal_column):
 
     return df
 
-def roll_oco_orders(client, symbol):
+def roll_oco_orders(client):
     order = {}
-    orders = get_open_orders(client, symbol)
+    orders = get_all_open_orders(client)
 
     if len(orders) > 0:
         # eliminate duplicates with set
@@ -116,6 +120,7 @@ def roll_oco_orders(client, symbol):
             # test if open orders is an oco order
             if len(orders_by_list_id) == 2:
                 # get current symbol price
+                symbol = [order['symbol'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0]
                 current_price = get_lastest_price(client, symbol)
 
                 order_id_stop = [order['orderId'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0]
@@ -165,10 +170,11 @@ def roll_oco_orders(client, symbol):
                         price=new_limit_price)
                     
                     print(order)
+                    telegram_bot_sendtext('OCO orders are rolled: ' + str(order))
     
-    return order
+    return
 
-def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rolling):
+def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
     df = add_row(df, new_row)
     symbol_order = base_asset + quote_asset
 
@@ -177,12 +183,6 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset, oco_rol
     filename = path / 'trading-strategies.csv'
     df_strategies = pd.read_csv(filename)
     df_strategies = df_strategies[df_strategies['Symbol'] == symbol]
-
-    if oco_rolling:
-        oco_order = roll_oco_orders(client, symbol_order)
-        if oco_order != {}:
-            print('OCO orders are rolled: ' + str(oco_order))
-            telegram_bot_sendtext('OCO orders are rolled: ' + str(oco_order))
 
     for index, strategy in df_strategies.iterrows():
         interval = strategy['Interval']
