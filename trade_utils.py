@@ -70,14 +70,63 @@ def update_signal_by_strategy(df, signal_column):
         df['Signal100SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA100']].copy())
     elif signal_column == 'SignalMACDStrategy':
         df['SignalMACDStrategy'] = get_macd_signal(df[['MACDSignal']].copy(), df[['MACD']].copy())
+    ### RSI
+    # overbought 80 oversold [40, 35, 30, 25, 20]
+    elif signal_column == 'SignalRSIStrategy80_40':
+        df['SignalRSIStrategy80_40'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=80, oversold_value=40)
+    elif signal_column == 'SignalRSIStrategy80_35':
+        df['SignalRSIStrategy80_35'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=80, oversold_value=35)
+    elif signal_column == 'SignalRSIStrategy80_30':
+        df['SignalRSIStrategy80_30'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=80, oversold_value=30)
+    elif signal_column == 'SignalRSIStrategy80_25':
+        df['SignalRSIStrategy80_25'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=80, oversold_value=25)
+    elif signal_column == 'SignalRSIStrategy80_20':
+        df['SignalRSIStrategy80_20'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=80, oversold_value=20)
+    # overbought 75  oversold [40, 35, 30, 25, 20]
+    elif signal_column == 'SignalRSIStrategy75_40':
+        df['SignalRSIStrategy75_40'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=75, oversold_value=40)
+    elif signal_column == 'SignalRSIStrategy75_35':
+        df['SignalRSIStrategy75_35'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=75, oversold_value=35)
+    elif signal_column == 'SignalRSIStrategy75_30':
+        df['SignalRSIStrategy75_30'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=75, oversold_value=30)
     elif signal_column == 'SignalRSIStrategy75_25':
         df['SignalRSIStrategy75_25'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=75, oversold_value=25)
+    elif signal_column == 'SignalRSIStrategy75_20':
+        df['SignalRSIStrategy75_20'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=75, oversold_value=20)
+    # overbought 70 oversold [40, 35, 30, 25, 20]
+    elif signal_column == 'SignalRSIStrategy70_40':
+        df['SignalRSIStrategy70_40'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=70, oversold_value=40)
+    elif signal_column == 'SignalRSIStrategy70_35':
+        df['SignalRSIStrategy70_35'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=70, oversold_value=35)
     elif signal_column == 'SignalRSIStrategy70_30':
         df['SignalRSIStrategy70_30'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=70, oversold_value=30)
+    elif signal_column == 'SignalRSIStrategy70_25':
+        df['SignalRSIStrategy70_25'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=70, oversold_value=25)
+    elif signal_column == 'SignalRSIStrategy70_20':
+        df['SignalRSIStrategy70_20'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=70, oversold_value=20)
+    # overbought 65 oversold [40, 35, 30, 25, 20]
+    elif signal_column == 'SignalRSIStrategy65_40':
+        df['SignalRSIStrategy65_40'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=65, oversold_value=40)
     elif signal_column == 'SignalRSIStrategy65_35':
         df['SignalRSIStrategy65_35'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=65, oversold_value=35)
+    elif signal_column == 'SignalRSIStrategy65_30':
+        df['SignalRSIStrategy65_30'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=65, oversold_value=30)
+    elif signal_column == 'SignalRSIStrategy65_25':
+        df['SignalRSIStrategy65_25'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=65, oversold_value=25)
+    elif signal_column == 'SignalRSIStrategy65_20':
+        df['SignalRSIStrategy65_20'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=65, oversold_value=20)
+    # overbought 60 oversold [40, 35, 30, 25, 20]
     elif signal_column == 'SignalRSIStrategy60_40':
         df['SignalRSIStrategy60_40'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=60, oversold_value=40)
+    elif signal_column == 'SignalRSIStrategy60_35':
+        df['SignalRSIStrategy60_35'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=60, oversold_value=35)
+    elif signal_column == 'SignalRSIStrategy60_30':
+        df['SignalRSIStrategy60_30'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=60, oversold_value=30)
+    elif signal_column == 'SignalRSIStrategy60_25':
+        df['SignalRSIStrategy60_25'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=60, oversold_value=25)
+    elif signal_column == 'SignalRSIStrategy60_20':
+        df['SignalRSIStrategy60_20'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=60, oversold_value=20)
+    ###
     elif signal_column == 'SignalRSIADXStrategy':
         df['SignalRSIADXStrategy'] = get_rsi_adx_signal(df[['RSI']].copy(), 
                                                         df[['ADX']].copy(), 
