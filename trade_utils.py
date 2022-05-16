@@ -136,7 +136,7 @@ def update_signal_by_strategy(df, signal_column):
                                                         oversold_value=30.0)
     elif signal_column == 'SignalSMAMACDStrategy':
         df['SignalSMAMACDStrategy'] = get_sma_macd_signal(df[['ClosePrice']].copy(), 
-                                                          df[['SMA50']].copy(), 
+                                                          df[['SMA30']].copy(), 
                                                           df[['SMA100']].copy(), 
                                                           df[['MACD']].copy())
     elif signal_column == 'SignalMACDRVIStrategy':
