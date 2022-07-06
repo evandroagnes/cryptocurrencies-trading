@@ -69,9 +69,6 @@ def get_adx(high_price, low_price, close_price, period=14):
         https://blog.quantinsti.com/adx-indicator-python/ """
 
     df_adx = pd.DataFrame(columns=[
-        'H-L', 
-        'ABS(Hi-Ci-1)', 
-        'ABS(Li-Ci-1)', 
         'TR', 
         'DM+', 
         'DM-', 
@@ -84,10 +81,7 @@ def get_adx(high_price, low_price, close_price, period=14):
         'ADX'
     ])
 
-    df_adx['H-L'] = high_price - low_price
-    df_adx['ABS(Hi-Ci-1)'] = abs(high_price - close_price.shift())
-    df_adx['ABS(Li-Ci-1)'] = abs(low_price - close_price.shift())
-    df_adx['TR'] = df_adx[['H-L', 'ABS(Hi-Ci-1)', 'ABS(Li-Ci-1)']].max(axis=1, skipna=False)
+    df_adx['TR'] = get_tr(high_price, low_price, close_price)
 
     #If (Today's high - Yesterday's High) > (Yesterday's Low - Today's Low), then
     #DM+ = (Today's high - Yesterday's High)
@@ -119,6 +113,17 @@ def get_adx(high_price, low_price, close_price, period=14):
     df_adx['ADX'] = get_wilder_smoothing(df_adx['DX'], period)
     
     return df_adx['DI+'], df_adx['DI-'], df_adx['ADX']
+
+def get_tr(high_price, low_price, close_price):
+    high_low = high_price - low_price
+    high_close = abs(high_price - close_price.shift())
+    low_close = abs(low_price - close_price.shift())
+
+    return pd.concat([high_low, high_close, low_close], axis=1).max(axis=1, skipna=False)
+
+def get_atr(high_price, low_price, close_price, period=14):
+
+    return get_tr(high_price, low_price, close_price).ewm(alpha=1/period, adjust=False).mean()
 
 def get_fibonacci_retracement_levels(price_max, price_min):
     diff = price_max - price_min
@@ -219,3 +224,82 @@ def get_stochastic_oscillator(close_price, low_price, high_price, period=3):
     sod = sok.rolling(period).mean()
 
     return sok, sod
+
+def get_fma(close_price):
+    
+    # Adding Columns
+    data = close_price.copy()
+
+    # Calculating Different Moving Averages
+    data['ema1'] = get_ema(close_price, 5)    
+    data['ema2'] = get_ema(close_price, 8)    
+    data['ema3'] = get_ema(close_price, 13)    
+    data['ema4'] = get_ema(close_price, 21)    
+    data['ema5'] = get_ema(close_price, 34)    
+    data['ema6'] = get_ema(close_price, 55)    
+    data['ema7'] = get_ema(close_price, 89)    
+    data['ema8'] = get_ema(close_price, 144)    
+    data['ema9'] = get_ema(close_price, 233)    
+    data['ema10'] = get_ema(close_price, 377)    
+    data['ema11'] = get_ema(close_price, 610)    
+    data['ema12'] = get_ema(close_price, 987)    
+    data['ema13'] = get_ema(close_price, 1597) 
+    data['ema14'] = get_ema(close_price, 2584) 
+    data['ema15'] = get_ema(close_price, 4181) 
+    data['ema16'] = get_ema(close_price, 6765) 
+    
+    # Calculating the High FMA
+    data['fma_high'] = data[['ema1', 
+                        'ema2', 
+                        'ema3', 
+                        'ema4', 
+                        'ema5', 
+                        'ema6', 
+                        'ema7', 
+                        'ema8', 
+                        'ema9', 
+                        'ema10', 
+                        'ema11', 
+                        'ema12', 
+                        'ema13', 
+                        'ema14', 
+                        'ema15', 
+                        'ema16']].sum(axis=1) / 16
+
+    # Calculating Different Moving Averages
+    data['ema1'] = get_ema(data[['fma_high']], 5)    
+    data['ema2'] = get_ema(data[['fma_high']], 8)    
+    data['ema3'] = get_ema(data[['fma_high']], 13)    
+    data['ema4'] = get_ema(data[['fma_high']], 21)    
+    data['ema5'] = get_ema(data[['fma_high']], 34)    
+    data['ema6'] = get_ema(data[['fma_high']], 55)    
+    data['ema7'] = get_ema(data[['fma_high']], 89)    
+    data['ema8'] = get_ema(data[['fma_high']], 144)    
+    data['ema9'] = get_ema(data[['fma_high']], 233)    
+    data['ema10'] = get_ema(data[['fma_high']], 377)    
+    data['ema11'] = get_ema(data[['fma_high']], 610)    
+    data['ema12'] = get_ema(data[['fma_high']], 987)    
+    data['ema13'] = get_ema(data[['fma_high']], 1597) 
+    data['ema14'] = get_ema(data[['fma_high']], 2584) 
+    data['ema15'] = get_ema(data[['fma_high']], 4181) 
+    data['ema16'] = get_ema(data[['fma_high']], 6765) 
+    
+    # Calculating the High FMA
+    data['fma_low'] = data[['ema1', 
+                        'ema2', 
+                        'ema3', 
+                        'ema4', 
+                        'ema5', 
+                        'ema6', 
+                        'ema7', 
+                        'ema8', 
+                        'ema9', 
+                        'ema10', 
+                        'ema11', 
+                        'ema12', 
+                        'ema13', 
+                        'ema14', 
+                        'ema15', 
+                        'ema16']].sum(axis=1) / 16
+
+    return data[['fma_high', 'fma_low']]

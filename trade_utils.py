@@ -3,7 +3,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from pathlib import Path
 from binance_utils import *
-from technical_indicator_utils import get_sma, get_macd, get_rsi, get_adx, get_rvi, get_bbands
+from technical_indicator_utils import get_sma, get_macd, get_rsi, get_adx, get_rvi, get_bbands, get_atr
 from message_utils import telegram_bot_sendtext
 from strategy_utils import *
 
@@ -52,6 +52,7 @@ def generate_technical_indicators(df):
     df['DI+'], df['DI-'], df['ADX'] = get_adx(df['HighPrice'], df['LowPrice'], df['ClosePrice'])
     df['RVI'], df['RVISignal'] = get_rvi(df['OpenPrice'], df['ClosePrice'], df['LowPrice'], df['HighPrice'])
     df['UpperBBand'], df['MidiBBand'], df['LowerBBand'] = get_bbands(df['ClosePrice'])
+    df['ATR'] = get_atr(df['HighPrice'], df['LowPrice'], df['ClosePrice'])
 
     return df
 
@@ -282,8 +283,10 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
                                         float(trade_info_dict['min_price']))
                                     quantity = float(order['executedQty'])
                                     # stop = get min low value of last 5 candles
-                                    stop_value = get_trunc_value(df_trade[-num_candles_min_price:]['LowPrice'].min(), float(trade_info_dict['min_price']))
-                                    # price = buy value + (2 * (buy value - stop))
+                                    stop_value = df_trade[-num_candles_min_price:]['LowPrice'].min()
+                                    # use average true range * 2 as threshold
+                                    stop_value = stop_value - (df_trade['ATR'][-1] * 2)
+                                    stop_value = get_trunc_value(stop_value, float(trade_info_dict['min_price']))
                                     price_value = buy_value + (2 * (buy_value - stop_value))
                                     price_value = get_trunc_value(price_value, float(trade_info_dict['min_price']))
                                     # create OCO order to sell

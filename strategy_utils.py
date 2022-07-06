@@ -310,3 +310,76 @@ def get_dmi_signal(di_plus, di_minus, adx, adx_value=25.0, buy_first=True):
     signal = remove_repeated_signal(signal, 'value')
 
     return signal
+
+def get_ema_atr_signal(price_data, rsi_value, ema_value, atr_value, oversold_value=30):
+    """
+    entry: rsi < oversold_value & price > ema200
+    stop-loss: ema 200 - (atr/2)
+    profit: price + ((price - stop-loss) * 2)
+    """
+    price_data.columns = ['value']
+    rsi_value.columns = ['value']
+    ema_value.columns = ['value']
+    atr_value.columns = ['value']
+
+    signal = price_data.copy()
+    long = False
+    stop_loss = 0.0
+    profit = 0.0
+    for i in range(price_data.size):
+        #entry
+        if price_data.iloc[i]['value'] > ema_value.iloc[i]['value'] and rsi_value.iloc[i]['value'] < oversold_value and not long:
+            signal.iloc[i] = 1.0
+            stop_loss = ema_value.iloc[i]['value'] - (atr_value.iloc[i]['value'] / 2)
+            profit = price_data.iloc[i]['value'] + ((price_data.iloc[i]['value'] - stop_loss) * 2)
+            long = True
+        
+        #stop-loss
+        if price_data.iloc[i]['value'] < stop_loss and long:
+            signal.iloc[i] = -1.0
+            long = False
+
+        #profit
+        if price_data.iloc[i]['value'] > profit and long:
+            signal.iloc[i] = -1.0
+            long = False
+            
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+
+    return signal
+
+def get_rsi_atr_signal(price_data, rsi_value, atr_value, oversold_value=30):
+    """
+    entry: rsi < oversold_value
+    stop-loss: price - (atr * 2)
+    profit: price + ((price - stop-loss) * 2)
+    """
+    price_data.columns = ['value']
+    rsi_value.columns = ['value']
+    atr_value.columns = ['value']
+
+    signal = price_data.copy()
+    long = False
+    stop_loss = 0.0
+    profit = 0.0
+    for i in range(price_data.size):
+        #entry
+        if rsi_value.iloc[i]['value'] < oversold_value and not long:
+            signal.iloc[i] = 1.0
+            stop_loss = price_data.iloc[i]['value'] - (atr_value.iloc[i]['value'] * 2)
+            profit = price_data.iloc[i]['value'] + ((price_data.iloc[i]['value'] - stop_loss) * 2)
+            long = True
+        
+        #stop-loss
+        if price_data.iloc[i]['value'] < stop_loss and long:
+            signal.iloc[i] = -1.0
+            long = False
+
+        #profit
+        if price_data.iloc[i]['value'] > profit and long:
+            signal.iloc[i] = -1.0
+            long = False
+            
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+
+    return signal
