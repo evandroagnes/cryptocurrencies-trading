@@ -1,4 +1,4 @@
-tensorflow==2.7
+tensorflow==2.8.0
 numpy==1.21.5
 pandas==1.3.5
 plotly==4.14.3
@@ -7,10 +7,11 @@ seaborn==0.11.2
 statsmodels==0.12.2
 requests==2.26.0
 PyYAML==5.4.1
-python-binance==1.0.15
+python-binance==1.0.16
 bt==0.2.9
 tqdm==4.62.2
 pyarrow==6.0.1
 yfinance==0.1.69
 beautifulsoup4==4.10.0
 hurst==0.0.5
+kneed==0.7.0

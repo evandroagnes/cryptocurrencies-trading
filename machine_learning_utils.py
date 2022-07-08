@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 from statsmodels.tsa.stattools import adfuller
+from sklearn.cluster import KMeans
+from kneed import KneeLocator
 
 def get_labels_future_returns(price_data):
     """
@@ -109,3 +111,29 @@ def split_sequence(sequence, n_steps):
         y.append(sequence[i, -1])
 
     return np.array(X), np.array(y)
+
+def get_kmeans_clusters(df, k=0):
+    '''
+    :param df: dataframe with only one data column, usually low or high prices
+    :param k: if k is setted by a value different from zero, it is used as number of clusters
+    :return: clusters with the best K centers, inertia
+
+    This method uses elbow method to find the best number of K clusters
+    '''
+    wcss = []
+    k_models = []
+
+    size = min(11, len(df.index))
+    for i in range(1, size):
+        kmeans = KMeans(n_clusters = i, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 42)
+        kmeans.fit(df)
+        wcss.append(kmeans.inertia_)
+        k_models.append(kmeans)
+
+    if (k == 0):
+        kl = KneeLocator(range(1, 11), wcss, curve = 'convex', direction = 'decreasing')
+        k = kl.elbow
+
+    clusters = k_models[k - 1]
+
+    return clusters, wcss
