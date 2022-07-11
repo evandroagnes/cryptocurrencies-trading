@@ -132,7 +132,7 @@ def get_kmeans_clusters(df, k=0):
 
     if (k == 0):
         kl = KneeLocator(range(1, 11), wcss, curve = 'convex', direction = 'decreasing')
-        k = kl.elbow
+        k = kl.elbow + 1
 
     clusters = k_models[k - 1]
 
