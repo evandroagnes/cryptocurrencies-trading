@@ -89,6 +89,29 @@ def get_window_shifting_levels(df, window=5):
 
     return levels
 
+def get_all_pivot_point_levels(df):
+  pivot_point = (df['HighPrice'] + df['LowPrice'] + df['ClosePrice']) / 3
+  support_l1 = (pivot_point * 2) - df['HighPrice']
+  support_l2 = pivot_point - (df['HighPrice'] - df['LowPrice'])
+  support_l3 = df['LowPrice'] - 2 * (df['HighPrice'] - pivot_point)
+  resistance_l1 = (pivot_point * 2) - df['LowPrice']
+  resistance_l2 = pivot_point + (df['HighPrice'] - df['LowPrice'])
+  resistance_l3 = df['HighPrice'] + 2 * (pivot_point - df['LowPrice'])
+
+  return pivot_point, support_l1, support_l2, support_l3, resistance_l1, resistance_l2, resistance_l3
+
+def get_pivot_point_levels(df):
+  _, support_l1, support_l2, support_l3, resistance_l1, resistance_l2, resistance_l3 = get_all_pivot_point_levels(df)
+  levels = []
+  levels.append((0, support_l1[-1]))
+  levels.append((0, support_l2[-1]))
+  levels.append((0, support_l3[-1]))
+  levels.append((0, resistance_l1[-1]))
+  levels.append((0, resistance_l2[-1]))
+  levels.append((0, resistance_l3[-1]))
+
+  return levels
+
 def is_far_from_level(value, levels, df):
     ave =  np.mean(df['HighPrice'] - df['LowPrice'])
     return np.sum([abs(value - level) < ave for _, level in levels]) == 0
