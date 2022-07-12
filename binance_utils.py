@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import yaml
 from datetime import datetime
 from urllib3.exceptions import ReadTimeoutError
@@ -288,3 +289,19 @@ def get_all_open_orders(client):
     except ReadTimeoutError as e:
         print(e)
         raise
+
+def get_trades(client, symbol):
+    """
+    Get trades by symbol.
+    """
+    df_orders = pd.DataFrame(client.get_my_trades(symbol=symbol))
+    df_orders['time'] = pd.to_datetime(df_orders['time'], unit='ms')
+    df_orders['price'] = df_orders['price'].astype('float')
+    df_orders['qty'] = df_orders['qty'].astype('float')
+    df_orders['quoteQty'] = df_orders['quoteQty'].astype('float')
+    df_orders = df_orders.groupby(['time', 'symbol', 'orderId', 'isBuyer'])[['price', 'qty', 'quoteQty']].agg({'price': 'mean', 'qty': 'sum', 'quoteQty': 'sum'})
+    df_orders.reset_index(inplace=True)
+    df_orders['side'] = np.where(df_orders['isBuyer'], 'BUY', 'SELL')
+    df_orders = df_orders.rename(columns={'price' : 'avgPrice'})
+
+    return df_orders[['time', 'symbol', 'orderId', 'side', 'avgPrice', 'qty', 'quoteQty']].copy()
