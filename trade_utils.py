@@ -434,3 +434,6 @@ def get_num_daily_bars(df):
     delta = df.index[-1] - df.index[-2]
 
     return int(NUM_SECONDS_IN_A_DAY / ((NUM_SECONDS_IN_A_DAY * delta.days) + delta.seconds))
+
+def get_intervals():
+    return ['1min', '3min', '5min', '15min', '30min', '1H', '2H', '4H', '6H', '8H', '12H', '1D', '3D', '1W', '1M']
