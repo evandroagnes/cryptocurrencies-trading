@@ -25,3 +25,6 @@ api_test_creds:
 telegram:
     bot_token: <your token>
     bot_chatID: <your chat ID>
+
+api_glassnode:
+    api_glassnode_key: <your glassnode api key>
