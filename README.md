@@ -61,6 +61,10 @@ Create a config file named `config.yml` based on `config.yml.example`, then upda
 
     **bot_chatID**: chat id
 
+- api_glassnode:
+
+    **api_glassnode_key**: api-key from glassnode to gather some the on-chain indicators. A Standard Plan (free) is sufficient to run the notebook.
+
 
 **Create trade strategies:**
 
@@ -90,7 +94,8 @@ There are also some jupyter notebooks to perform analysis, backtesting and predi
 - cryptocurrencies_analysis: price analysis and backtesting on strategies;
 - cryptocurrencies_ml: a basic machine learning model;
 - cryptocurrencies_alts: comparative altcoins analysis;
-- cryptocurrencies_arbitrage.ipynb: profitable arbitrage scan.
+- cryptocurrencies_arbitrage.ipynb: profitable arbitrage scan;
+- cryptocurrencies_on-chain_analysis.ipynb: on-chain analysis. You need a glassnode api-key from a Standard Plan (free) to execute the entire notebook.
 
 Don't forget to install the jupyter notebook in your environment before:
 

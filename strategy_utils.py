@@ -383,3 +383,53 @@ def get_rsi_atr_signal(price_data, rsi_value, atr_value, oversold_value=30):
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
 
     return signal
+
+def get_planBTC_strategy(rsi_value, buy_first=True):
+    """
+    https://planbtc.com/20220807QuantInvesting101.pdf
+    * Data tested from January 2011
+
+    BTC monthly closing data.
+    IF (RSI was above 90% last six months AND drops below 65%) THEN sell,
+    IF (RSI was below 50% last six months AND jumps +2% from the low) THEN buy, 
+    ELSE hold
+    """
+    rsi_value.columns = ['value']
+
+    # strategy params
+    months_range = 6
+    overbought_value = 90
+    overbought_drop_value = 65
+    oversold_value = 50
+
+    signal = rsi_value.copy()
+    long = False
+    if buy_first:
+        signal.iloc[0] = 1.0
+        long = True
+
+    for i in range(rsi_value.size):
+        rsi = rsi_value.iloc[i]
+        max_rsi_last_6_months = rsi_value[i-months_range:i+1].max()
+        min_rsi_last_6_months = rsi_value[i-months_range:i+1].min()
+        if i < 6:
+            max_rsi_last_6_months = rsi_value[:i+1].max()
+            min_rsi_last_6_months = rsi_value[:i+1].min()
+
+        # SELL
+        if (max_rsi_last_6_months >= overbought_value and 
+                rsi <= overbought_drop_value and 
+                long):
+            signal.iloc[i] = -1.0
+            long = False
+        
+        # BUY
+        if (min_rsi_last_6_months <= oversold_value and 
+                rsi >= min_rsi_last_6_months + 2 and 
+                not long):
+            signal.iloc[i] = 1.0
+            long = True
+
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+
+    return signal
