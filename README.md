@@ -63,7 +63,7 @@ Create a config file named `config.yml` based on `config.yml.example`, then upda
 
 - api_glassnode:
 
-    **api_glassnode_key**: api-key from [glassnode](https://glassnode.com/) to gather some the on-chain indicators. A Standard Plan (free) is sufficient to run the notebook.
+    **api_glassnode_key**: api-key from [glassnode](https://glassnode.com/) to gather some on-chain indicators. A Standard Plan (free) is sufficient to run the notebook.
 
 
 **Create trade strategies:**
