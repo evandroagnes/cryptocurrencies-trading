@@ -4,29 +4,45 @@ from statsmodels.tsa.stattools import adfuller
 from sklearn.cluster import KMeans
 from kneed import KneeLocator
 
-def get_labels_future_returns(price_data):
+from strategy_utils import remove_repeated_signal
+
+def get_labels_future_returns(price_data, return_threshold=0.0):
     """
     Binary labelling.
  
-    If future returns > 0 then signal = 1 (buy) otherwise = -1 (sell).
+    If future returns > return_threshold then signal = 1 (buy)
+    If future returns < 0 and long then signal = -1 (sell)
+    Otherwise signal = 0 (do nothing).
  
     Parameters
     ----------
     price_data : asset's close price
+    return_threshold: threshold for long signal (buy) in percent
      
     Returns
     -------
-    labs : A pandas dataframe containing the labels for each return.
+    labs : A pandas dataframe containing the labels for each return
     """
     price_data = price_data.copy()
 
     # Create a column 'FutureReturns' with the calculation of percentage change
     price_data['FutureReturns'] = price_data.pct_change().shift(-1)
 
-    # Create the signal column
-    price_data['signal'] = np.where(price_data['FutureReturns'] > 0, 1, 0)
+    # Create the signal column with BUY signals
+    signal = np.where(price_data['FutureReturns'] >= return_threshold, 1.0, 0)
 
-    return price_data[['signal']].copy()
+    # SELL signals
+    long = False
+    for i in range(price_data.shape[0]):
+        if signal[i] == 1.0:
+            long = True
+        
+        if price_data.iloc[i]['FutureReturns'] < 0 and long:
+            signal[i] = -1.0
+            long = False
+
+    price_data['signal'] = signal
+    return remove_repeated_signal(price_data[['signal']], 'signal')
 
 def get_labels_fixed_time_horizon(price_data, threshold):
     """
