@@ -3,7 +3,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from pathlib import Path
 from binance_utils import *
-from technical_indicator_utils import get_sma, get_macd, get_rsi, get_adx, get_rvi, get_bbands, get_atr
+from technical_indicator_utils import get_sma, get_ema, get_macd, get_rsi, get_adx, get_rvi, get_bbands, get_atr
 from message_utils import telegram_bot_sendtext
 from strategy_utils import *
 
@@ -41,17 +41,34 @@ def resample_data(df, time_resample):
     return df_resample
 
 def generate_technical_indicators(df):
+    #SMA
+    df['SMA2'] = get_sma(df['ClosePrice'], 2)
+    df['SMA3'] = get_sma(df['ClosePrice'], 3)
+    df['SMA5'] = get_sma(df['ClosePrice'], 5)
+    df['SMA8'] = get_sma(df['ClosePrice'], 8)
     df['SMA10'] = get_sma(df['ClosePrice'], 10)
     df['SMA20'] = get_sma(df['ClosePrice'], 20)
     df['SMA30'] = get_sma(df['ClosePrice'], 30)
+    df['SMA40'] = get_sma(df['ClosePrice'], 40)
     df['SMA50'] = get_sma(df['ClosePrice'], 50)
+    df['SMA60'] = get_sma(df['ClosePrice'], 60)
+    df['SMA70'] = get_sma(df['ClosePrice'], 70)
+    df['SMA80'] = get_sma(df['ClosePrice'], 80)
+    df['SMA90'] = get_sma(df['ClosePrice'], 90)
     df['SMA100'] = get_sma(df['ClosePrice'], 100)
     df['SMA200'] = get_sma(df['ClosePrice'], 200)
+    #EMA
+    df['EMA20'] = get_ema(df['ClosePrice'], 20)
+    df['EMA30'] = get_ema(df['ClosePrice'], 30)
+    df['EMA40'] = get_ema(df['ClosePrice'], 40)
+    df['EMA50'] = get_ema(df['ClosePrice'], 50)
+
+
     df['MACD'], df['MACDSignal'], df['MACDHist'] = get_macd(df['ClosePrice'])
     df['RSI'] = get_rsi(df['ClosePrice'])
     df['DI+'], df['DI-'], df['ADX'] = get_adx(df['HighPrice'], df['LowPrice'], df['ClosePrice'])
     df['RVI'], df['RVISignal'] = get_rvi(df['OpenPrice'], df['ClosePrice'], df['LowPrice'], df['HighPrice'])
-    df['UpperBBand'], df['MidiBBand'], df['LowerBBand'] = get_bbands(df['ClosePrice'])
+    df['UpperBBand'], df['MidiBBand'], df['LowerBBand'], df['BBW'] = get_bbands(df['ClosePrice'])
     df['ATR'] = get_atr(df['HighPrice'], df['LowPrice'], df['ClosePrice'])
 
     return df
@@ -59,7 +76,9 @@ def generate_technical_indicators(df):
 def update_signal_by_strategy(df, signal_column):
     df = generate_technical_indicators(df)
 
-    if signal_column == 'Signal10SMAStrategy':
+    if signal_column == 'Signal5SMAStrategy':
+        df['Signal5SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA5']].copy())
+    elif signal_column == 'Signal10SMAStrategy':
         df['Signal10SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA10']].copy())
     elif signal_column == 'Signal20SMAStrategy':
         df['Signal20SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA20']].copy())
@@ -71,6 +90,7 @@ def update_signal_by_strategy(df, signal_column):
         df['Signal100SMAStrategy'] = get_cross_signal(df[['ClosePrice']].copy(), df[['SMA100']].copy())
     elif signal_column == 'SignalMACDStrategy':
         df['SignalMACDStrategy'] = get_macd_signal(df[['MACDSignal']].copy(), df[['MACD']].copy())
+
     ### RSI
     # overbought 80 oversold [40, 35, 30, 25, 20]
     elif signal_column == 'SignalRSIStrategy80_40':
@@ -128,6 +148,63 @@ def update_signal_by_strategy(df, signal_column):
     elif signal_column == 'SignalRSIStrategy60_20':
         df['SignalRSIStrategy60_20'] = get_rsi_signal(df[['RSI']].copy(), overbought_value=60, oversold_value=20)
     ###
+
+    ### SMA CROSS
+    elif signal_column == 'SignalSMACROSSStrategy2_10':
+        df['SignalSMACROSSStrategy2_10'] = get_cross_signal(df[['SMA2']].copy(), df[['SMA10']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy3_8':
+        df['SignalSMACROSSStrategy3_8'] = get_cross_signal(df[['SMA3']].copy(), df[['SMA8']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy3_40':
+        df['SignalSMACROSSStrategy3_40'] = get_cross_signal(df[['SMA3']].copy(), df[['SMA40']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy3_50':
+        df['SignalSMACROSSStrategy3_50'] = get_cross_signal(df[['SMA3']].copy(), df[['SMA50']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy5_30':
+        df['SignalSMACROSSStrategy5_30'] = get_cross_signal(df[['SMA5']].copy(), df[['SMA30']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy5_50':
+        df['SignalSMACROSSStrategy5_50'] = get_cross_signal(df[['SMA5']].copy(), df[['SMA50']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy5_90':
+        df['SignalSMACROSSStrategy5_90'] = get_cross_signal(df[['SMA5']].copy(), df[['SMA90']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy8_20':
+        df['SignalSMACROSSStrategy8_20'] = get_cross_signal(df[['SMA8']].copy(), df[['SMA20']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy8_40':
+        df['SignalSMACROSSStrategy8_40'] = get_cross_signal(df[['SMA8']].copy(), df[['SMA40']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy8_70':
+        df['SignalSMACROSSStrategy8_70'] = get_cross_signal(df[['SMA8']].copy(), df[['SMA70']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy10_30':
+        df['SignalSMACROSSStrategy10_30'] = get_cross_signal(df[['SMA10']].copy(), df[['SMA30']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy10_80':
+        df['SignalSMACROSSStrategy10_80'] = get_cross_signal(df[['SMA10']].copy(), df[['SMA80']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy20_30':
+        df['SignalSMACROSSStrategy20_30'] = get_cross_signal(df[['SMA20']].copy(), df[['SMA30']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy20_40':
+        df['SignalSMACROSSStrategy20_40'] = get_cross_signal(df[['SMA20']].copy(), df[['SMA40']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy20_50':
+        df['SignalSMACROSSStrategy20_50'] = get_cross_signal(df[['SMA20']].copy(), df[['SMA50']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy20_70':
+        df['SignalSMACROSSStrategy20_70'] = get_cross_signal(df[['SMA20']].copy(), df[['SMA70']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy20_80':
+        df['SignalSMACROSSStrategy20_80'] = get_cross_signal(df[['SMA20']].copy(), df[['SMA80']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy30_40':
+        df['SignalSMACROSSStrategy30_40'] = get_cross_signal(df[['SMA30']].copy(), df[['SMA40']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy40_50':
+        df['SignalSMACROSSStrategy40_50'] = get_cross_signal(df[['SMA40']].copy(), df[['SMA50']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy40_60':
+        df['SignalSMACROSSStrategy40_60'] = get_cross_signal(df[['SMA40']].copy(), df[['SMA60']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy50_60':
+        df['SignalSMACROSSStrategy50_60'] = get_cross_signal(df[['SMA50']].copy(), df[['SMA60']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy50_70':
+        df['SignalSMACROSSStrategy50_70'] = get_cross_signal(df[['SMA50']].copy(), df[['SMA70']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy70_80':
+        df['SignalSMACROSSStrategy70_80'] = get_cross_signal(df[['SMA70']].copy(), df[['SMA80']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy80_90':
+        df['SignalSMACROSSStrategy80_90'] = get_cross_signal(df[['SMA80']].copy(), df[['SMA90']].copy())
+    ###
+
+    ### SMA CROSS
+    elif signal_column == 'SignalEMACROSSStrategy20_40':
+        df['SignalEMACROSSStrategy20_40'] = get_cross_signal(df[['EMA20']].copy(), df[['EMA40']].copy())
+    ###
+
     elif signal_column == 'SignalRSIADXStrategy':
         df['SignalRSIADXStrategy'] = get_rsi_adx_signal(df[['RSI']].copy(), 
                                                         df[['ADX']].copy(), 
@@ -153,6 +230,8 @@ def update_signal_by_strategy(df, signal_column):
         df['SignalInvertedRSIStrategy'] = get_inverted_rsi_signal(df[['RSI']].copy())
     elif signal_column == 'SignalDMIStrategy':
         df['SignalDMIStrategy'] = get_dmi_signal(df[['DI+']].copy(), df[['DI-']].copy(), df[['ADX']].copy())
+    elif signal_column == 'SignalADXMACDStrategy':
+        df['SignalADXMACDStrategy'] = get_adx_macd_signal(df[['MACD']].copy(), df[['DI+']].copy(), df[['DI-']].copy(), df[['ADX']].copy())
 
     return df
 
@@ -249,12 +328,12 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
             df_trade = resample_data(df, interval)
             df_trade = update_signal_by_strategy(df_trade, signal_column)
 
-            if df_trade[signal_column][-2] != df_trade[signal_column][-1]:
+            if df_trade[signal_column].iloc[-2] != df_trade[signal_column].iloc[-1]:
                 # get info about create orders (minimum, maximum, ...)
                 trade_info_dict = get_trade_info(client, symbol_order)
                 fee = trade_info_dict['exchange_fee']
 
-                if df_trade[signal_column][-1] == 1:
+                if df_trade[signal_column].iloc[-1] == 1:
                     side = 'BUY'
                     if create_orders:
                         # TODO extract method with buy/sell rules
@@ -271,11 +350,11 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
 
                         if quote_balance > float(trade_info_dict['quote_asset_min_value']):
                             order = create_market_order(client, symbol_order, side, quote_balance)
-                            message = 'Buy order sent: ' + str(order)
-                            print(message)
+                            message = 'Buy order sent: ' + str(symbol_order) + '->' + str(quote_balance)
+                            print('Buy order sent: ' + str(order))
 
                             if oco_strategy:
-                                    # TODO create a param to this
+                                    # TODO create a param to do this
                                     # number of candles to get min price
                                     num_candles_min_price = 5
                                     # get buy value
@@ -325,8 +404,8 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
 
                         if qty > float(trade_info_dict['base_asset_min_qty']):
                             order = create_market_order(client, symbol_order, side, qty)
-                            message = 'Sell order sent: ' + str(order)
-                            print(message)
+                            message = 'Sell order sent: ' + str(symbol_order) + '->' + str(qty)
+                            print('Sell order sent: ' + str(order))
                         else:
                             message = 'Unable to SELL, ' + base_asset + ' without balance: ' + str(balance)
                     else:
@@ -336,11 +415,13 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
 
     return df
 
-def get_data(client, pair, interval, save=True):
+def get_data(client, pair, interval, save=True, historic_data=False):
     save_all = False
-    path = Path(__file__).parent
-    filename = path / str('data/' + pair + '-1m-binance.parquet')
-    filename_all =  path / str('data/' + pair + '-1m-binance-all.parquet')
+    #current path
+    #path = Path(__file__).parent / str('data/')
+    path = '/media/evandro/Work/Workspace/data/trading/'
+    filename = path  + pair + '-1m-binance.parquet'
+    filename_all =  path + pair + '-1m-binance-all.parquet'
 
     try:
         table = pq.read_table(filename_all)
@@ -367,7 +448,7 @@ def get_data(client, pair, interval, save=True):
         table_from_2021 = pa.Table.from_pandas(df_from_2021)
         pq.write_table(table_from_2021, filename)
     
-    # valid intervals - 1min, 3min, 5min, 15min, 30min, 1H, 2H, 4H, 6H, 8H, 12H, 1D, 3D, 1W, 1M
+    # valid intervals - 1min, 3min, 5min, 15min, 30min, 1h, 2h, 4h, 6h, 8h, 12h, 1D, 3D, 1W, 1M
     # TODO validate input
     if interval == '1min' or interval == '1m':
         return df
@@ -376,7 +457,7 @@ def get_data(client, pair, interval, save=True):
         return df
 
 def is_candle_closed(df, interval):
-    # valid strategy intervals - 1min, 3min, 5min, 15min, 30min, 1H, 2H, 4H, 6H, 8H, 12H, 1D, 3D, 1W, 1M
+    # valid strategy intervals - 1min, 3min, 5min, 15min, 30min, 1h, 2h, 4h, 6h, 8h, 12h, 1D, 3D, 1W, 1M
     if interval == '1min':
         return True
     elif interval == '3min':
@@ -391,22 +472,22 @@ def is_candle_closed(df, interval):
     elif interval == '30min':
         if df.index.minute[-1] % 30 == 0:
             return True
-    elif interval == '1H':
+    elif interval == '1h':
         if df.index.hour[-2] != df.index.hour[-1]:
             return True
-    elif interval == '2H':
+    elif interval == '2h':
         if (df.index.hour[-2] != df.index.hour[-1]) and (df.index.hour[-2] % 2 == 0):
             return True
-    elif interval == '4H':
+    elif interval == '4h':
         if (df.index.hour[-2] != df.index.hour[-1]) and (df.index.hour[-2] % 4 == 0):
             return True
-    elif interval == '6H':
+    elif interval == '6h':
         if (df.index.hour[-2] != df.index.hour[-1]) and (df.index.hour[-2] % 6 == 0):
             return True
-    elif interval == '8H':
+    elif interval == '8h':
         if (df.index.hour[-2] != df.index.hour[-1]) and (df.index.hour[-2] % 8 == 0):
             return True
-    elif interval == '12H':
+    elif interval == '12h':
         if (df.index.hour[-2] != df.index.hour[-1]) and (df.index.hour[-2] % 12 == 0):
             return True
     elif interval == '1D':
@@ -437,3 +518,14 @@ def get_num_daily_bars(df):
 
 def get_intervals():
     return ['1min', '3min', '5min', '15min', '30min', '1H', '2H', '4H', '6H', '8H', '12H', '1D', '3D', '1W', '1M']
+
+def get_greater_interval_from(interval1, interval2):
+    try:
+        pos_interval1 = get_intervals().index(interval1)
+        pos_interval2 = get_intervals().index(interval2)
+        if pos_interval1 > pos_interval2:
+            return interval1
+        else:
+            return interval2
+    except ValueError:
+        return None

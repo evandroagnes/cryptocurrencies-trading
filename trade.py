@@ -68,7 +68,7 @@ def threaded_roll_oco_orders():
 
 def print_last_candle():
     for key in symbol_data:
-        print('{}: {:%Y-%m-%d %H:%M:%S} ClosePrice: {:0.8f}'.format(key, symbol_data[key].index[-1], symbol_data[key]['ClosePrice'][-1]))
+        print('{}: {:%Y-%m-%d %H:%M:%S} ClosePrice: {:0.8f}'.format(key, symbol_data[key].index[-1], symbol_data[key]['ClosePrice'].iloc[-1]))
 
 def exit_trade():
     global twm_sockets
@@ -145,7 +145,7 @@ live_trade = bool(cfg['params']['live_trade'])
 oco_rolling = bool(cfg['params']['roll_oco_orders'])
 # End trade parameters
 
-# create a dictionary with the symbol and it respective order asset
+# create a dictionary with the symbol and its respective order asset
 base_asset_order_dic = {}
 quote_asset_order_dic = {}
 for i in range(len(symbol_list)):

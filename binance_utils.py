@@ -101,7 +101,7 @@ def get_twm():
 
 def get_crypto_data(client, pair, interval, timestamp):
     # request historical candle (or klines) data
-    data = client.get_historical_klines(pair, interval, timestamp, limit=1000)
+    data = client.get_historical_klines(pair, interval, timestamp)
 
     df_crypto = pd.DataFrame(data, columns=[
         'OpenTime', 
@@ -222,7 +222,7 @@ def get_trade_info(client, symbol):
             base_asset_min_qty = filter['minQty']
             base_asset_max_qty = filter['maxQty']
             base_asset_step_size = filter['stepSize']
-        elif filter['filterType'] == 'MIN_NOTIONAL':
+        elif filter['filterType'] == 'NOTIONAL':
             quote_asset_min_value = filter['minNotional']
         elif filter['filterType'] == 'MARKET_LOT_SIZE':
             market_min_qty = filter['minQty']

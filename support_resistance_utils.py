@@ -1,4 +1,5 @@
 from machine_learning_utils import get_kmeans_clusters
+from sklearn.cluster import AgglomerativeClustering
 import pandas as pd
 import numpy as np
 
@@ -31,6 +32,43 @@ def get_kmeans_levels(df):
     for high in high_centers:
         if (high[0] > df['ClosePrice'][-1]):
             levels.append((0, high[0]))
+
+    return levels
+
+def get_agglomerative_clustering(df, rolling_wave_length, num_clusters):
+    df = df.copy()
+    df.reset_index(inplace=True)
+
+    # Create min and max waves
+    max_waves_temp = df['HighPrice'].rolling(rolling_wave_length).max().rename('waves')
+    min_waves_temp = df['LowPrice'].rolling(rolling_wave_length).min().rename('waves')
+    max_waves = pd.concat([max_waves_temp, pd.Series(np.zeros(len(max_waves_temp)) + 1)], axis=1)
+    min_waves = pd.concat([min_waves_temp, pd.Series(np.zeros(len(min_waves_temp)) + -1)], axis=1)
+
+    #  Remove dups
+    max_waves.drop_duplicates('waves', inplace=True)
+    min_waves.drop_duplicates('waves', inplace=True)
+    #  Merge max and min waves
+    waves = max_waves.append(min_waves).sort_index()
+    waves = waves[waves[0] != waves[0].shift()].dropna()
+
+    # Find Support/Resistance with clustering using the rolling stats
+    # Create [x,y] array where y is always 1
+    x = np.concatenate((waves.waves.values.reshape(-1, 1),
+                        (np.zeros(len(waves)) + 1).reshape(-1, 1)), axis=1)
+
+    # Initialize Agglomerative Clustering
+    cluster = AgglomerativeClustering(n_clusters=num_clusters, metric='euclidean', linkage='ward')
+    cluster.fit_predict(x)
+    waves['clusters'] = cluster.labels_
+
+    # Get index of the max wave for each cluster
+    waves2 = waves.loc[waves.groupby('clusters')['waves'].idxmax()]
+    waves2.waves.drop_duplicates(keep='first', inplace=True)
+
+    levels = []
+    for index, row in waves2.iterrows():
+      levels.append((0, row['waves']))
 
     return levels
 

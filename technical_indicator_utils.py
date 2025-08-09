@@ -47,10 +47,10 @@ def get_rsi(close_price, period = 14):
 def get_wilder_smoothing(data, periods):
     start = np.where(~np.isnan(data))[0][0] #Check if nans present in beginning
     wilder = np.array([np.nan]*len(data))
-    wilder[start+periods-1] = data[start:(start+periods)].mean() #Simple Moving Average
+    wilder[start+periods-1] = float(data[start:(start+periods)].mean()) #Simple Moving Average
     
     for i in range(start+periods,len(data)):
-        wilder[i] = (wilder[i-1]*(periods-1) + data[i])/periods #Wilder Smoothing
+        wilder[i] = (wilder[i-1]*(periods-1) + data.iloc[i])/periods #Wilder Smoothing
 
     return(wilder)
 
@@ -137,8 +137,9 @@ def get_bbands(close_price, period=20, multiplier=2):
     upper = close_price.rolling(period).mean() + close_price.rolling(period).std() * multiplier
     midi = close_price.rolling(period).mean()
     lower = close_price.rolling(period).mean() - close_price.rolling(period).std() * multiplier
+    bbw = (upper - lower) / close_price.rolling(period).mean()
 
-    return upper, midi, lower
+    return upper, midi, lower, bbw
 
 def get_momentum(close_price, n):
     return close_price / close_price.shift(n) - 1
@@ -183,29 +184,40 @@ def get_hurst(price_data, window=200):
         if i < window:
             hurst[i] = np.nan
         else:
-            H, c, val = compute_Hc(price_data[i - window:i], kind='price', simplified=True)
+            H, c, val = compute_Hc(price_data[i - window:i], kind='price')
             hurst[i] = H
 
     return hurst
+
+def get_hurst_signal(hurst):
+    """
+    Indicate the persistent nature of the market.
+    """
+    signal = hurst.copy()
+    signal[(hurst > 0.65)] = 1.0
+    signal[(hurst < 0.35)] = -1.0
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+
+    return signal
 
 def get_rvi(open_price, close_price, low_price, high_price, period=10):
     """
     Reference: https://kaabar-sofien.medium.com/the-relative-vigor-index-coding-trading-in-python-29af776f57cc
     """
     a = close_price - open_price
-    b =  2 * (close_price.shift(2) - open_price.shift(2))
-    c =  2 * (close_price.shift(3) - open_price.shift(3))
-    d =  2 * (close_price.shift(4) - open_price.shift(4))
+    b = 2 * (close_price.shift(2) - open_price.shift(2))
+    c = 2 * (close_price.shift(3) - open_price.shift(3))
+    d = 2 * (close_price.shift(4) - open_price.shift(4))
 
     e = high_price - low_price
-    f =  2 * (high_price.shift(2) - low_price.shift(2))
-    g =  2 * (high_price.shift(3) - low_price.shift(3))
-    h =  2 * (high_price.shift(4) - low_price.shift(4))
+    f = 2 * (high_price.shift(2) - low_price.shift(2))
+    g = 2 * (high_price.shift(3) - low_price.shift(3))
+    h = 2 * (high_price.shift(4) - low_price.shift(4))
 
-    Numerator = (a + b + c + d) / 6
-    Denominator = (e + f + g + h) / 6
+    numerator = (a + b + c + d) / 6
+    denominator = (e + f + g + h) / 6
 
-    rvi = get_sma(Numerator, period) / get_sma(Denominator, period)
+    rvi = get_sma(numerator, period) / get_sma(denominator, period)
 
     rvi1 = 2 * rvi.shift()
     rvi2 = 2 * rvi.shift(2)

@@ -28,18 +28,26 @@ def get_labels_future_returns(price_data, return_threshold=0.0):
     # Create a column 'FutureReturns' with the calculation of percentage change
     price_data['FutureReturns'] = price_data.pct_change().shift(-1)
 
-    # Create the signal column with BUY signals
-    signal = np.where(price_data['FutureReturns'] >= return_threshold, 1.0, 0)
+    # Create the signal column with zeros - do nothing signal
+    signal = np.zeros(len(price_data))
 
     # SELL signals
     long = False
+    cum_long_returns = 0.0
     for i in range(price_data.shape[0]):
-        if signal[i] == 1.0:
+        if price_data.iloc[i]['FutureReturns'] > 0:
+            cum_long_returns = cum_long_returns + price_data.iloc[i]['FutureReturns']
+
+        # BUY
+        if cum_long_returns > return_threshold and not long:
+            signal[i] = 1.0
             long = True
-        
+
+        # SELL
         if price_data.iloc[i]['FutureReturns'] < 0 and long:
             signal[i] = -1.0
             long = False
+            cum_long_returns = 0.0
 
     price_data['signal'] = signal
     return remove_repeated_signal(price_data[['signal']], 'signal')

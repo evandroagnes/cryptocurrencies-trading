@@ -21,7 +21,7 @@ def get_cross_signal(short_data, long_data, buy_first=True):
     signal[short_data <= long_data] = -1.0
 
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
 
     signal = remove_repeated_signal(signal, 'value')
 
@@ -37,7 +37,7 @@ def get_macd_signal(signal_macd, macd_value, buy_first=True):
     signal[signal_macd >= macd_value] = -1.0
 
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
 
     signal = remove_repeated_signal(signal, 'value')
 
@@ -67,7 +67,7 @@ def get_macd_rvi_signal(signal_macd, macd_value, signal_rvi, rvi_value, buy_firs
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
     
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
 
     signal = remove_repeated_signal(signal, 'value')
 
@@ -81,36 +81,42 @@ def get_rsi_signal(signal, overbought_value=70.0, oversold_value=30.0, buy_first
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
     
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
 
     if remove_repeated_signals:
         signal = remove_repeated_signal(signal, 'value')
 
     return signal
 
-def get_rsi_enter_signal(signal, overbought_value=70.0, oversold_value=30.0, buy_first=True):
+def get_rsi_enter_signal(signal, overbought_value=70.0, oversold_value=30.0, buy_first=True, remove_repeated_signals=True):
     signal.columns = ['value']
     signal[(signal.shift() > oversold_value) & (signal <= oversold_value)] = 1.0
     signal[(signal.shift() < overbought_value) & (signal >= overbought_value)] = -1.0
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
     
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
+
+    if remove_repeated_signals:
+        signal = remove_repeated_signal(signal, 'value')
 
     return signal
 
-def get_rsi_return_signal(signal, overbought_value=70.0, oversold_value=30.0, buy_first=True):
+def get_rsi_return_signal(signal, overbought_value=70.0, oversold_value=30.0, buy_first=True, remove_repeated_signals=True):
     signal.columns = ['value']
     signal[(signal.shift() < oversold_value) & (signal >= oversold_value)] = 1.0
     signal[(signal.shift() > overbought_value) & (signal <= overbought_value)] = -1.0
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
 
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
+
+    if remove_repeated_signals:
+        signal = remove_repeated_signal(signal, 'value')
 
     return signal
 
-def get_inverted_rsi_signal(signal, overbought_value=70.0, oversold_value=30.0, buy_first=True):
+def get_inverted_rsi_signal(signal, overbought_value=70.0, oversold_value=30.0, buy_first=True, remove_repeated_signals=True):
     """
     Buy when overbought begins (signal >= overbought_value) and sell when signal returns to a value below overbought_value.
     Sell when oversold begins (signal <= oversold_value) and buy when signal returns to a value above oversold_value.
@@ -126,13 +132,21 @@ def get_inverted_rsi_signal(signal, overbought_value=70.0, oversold_value=30.0, 
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
     
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
 
-    signal = remove_repeated_signal(signal, 'value')
+    if remove_repeated_signals:
+        signal = remove_repeated_signal(signal, 'value')
 
     return signal
 
-def get_rsi_adx_signal(signal, adx, di_plus, di_minus, overbought_value=70.0, oversold_value=30.0, adx_value=25.0, buy_first=True):
+def get_rsi_adx_signal(signal, 
+        adx, di_plus, 
+        di_minus, 
+        overbought_value=70.0, 
+        oversold_value=30.0, 
+        adx_value=25.0, 
+        buy_first=True, 
+        remove_repeated_signals=True):
     """
     https://usethebitcoin.com/how-to-trade-pullbacks-using-rsi-and-adx/
     """
@@ -146,13 +160,14 @@ def get_rsi_adx_signal(signal, adx, di_plus, di_minus, overbought_value=70.0, ov
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
     
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
 
-    signal = remove_repeated_signal(signal, 'value')
+    if remove_repeated_signals:
+        signal = remove_repeated_signal(signal, 'value')
 
     return signal
 
-def get_5_minute_signal(price_data, macd_history, ema, buy_first=True):
+def get_5_minute_signal(price_data, macd_history, ema, buy_first=True, remove_repeated_signals=True):
     """
     https://www.investopedia.com/articles/forex/08/five-minute-momo.asp
     """
@@ -174,13 +189,14 @@ def get_5_minute_signal(price_data, macd_history, ema, buy_first=True):
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
 
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
 
-    signal = remove_repeated_signal(signal, 'value')
+    if remove_repeated_signals:
+        signal = remove_repeated_signal(signal, 'value')
 
     return signal
 
-def get_sma_macd_signal(price_data, short_data, long_data, macd_data, buy_first=True):
+def get_sma_macd_signal(price_data, short_data, long_data, macd_data, buy_first=True, remove_repeated_signals=True):
     """ 
     - Wait for price data to be above SMA 50 (short) and SMA 100 (long);
     - If MACD is positive at least for the last 5 bars only (not more because in this case, the signal can be weak): LONG;
@@ -214,13 +230,14 @@ def get_sma_macd_signal(price_data, short_data, long_data, macd_data, buy_first=
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
 
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
 
-    signal = remove_repeated_signal(signal, 'value')
+    if remove_repeated_signals:
+        signal = remove_repeated_signal(signal, 'value')
 
     return signal
 
-def get_adx_macd_signal(macd, di_plus, di_minus, adx, buy_first=True):
+def get_adx_macd_signal(macd, di_plus, di_minus, adx, buy_first=True, remove_repeated_signals=True):
     """
     Buy Entry Rules:
     MACD trading above zero
@@ -246,13 +263,14 @@ def get_adx_macd_signal(macd, di_plus, di_minus, adx, buy_first=True):
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
     
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
 
-    signal = remove_repeated_signal(signal, 'value')
+    if remove_repeated_signals:
+        signal = remove_repeated_signal(signal, 'value')
 
     return signal
 
-def get_bbands_signal(price_data, upper_band, lower_band, buy_first=True):
+def get_bbands_signal(price_data, upper_band, lower_band, buy_first=True, remove_repeated_signals=True):
     price_data.columns = ['value']
     upper_band.columns = ['value']
     lower_band.columns = ['value']
@@ -263,13 +281,14 @@ def get_bbands_signal(price_data, upper_band, lower_band, buy_first=True):
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
     
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
 
-    signal = remove_repeated_signal(signal, 'value')
+    if remove_repeated_signals:
+        signal = remove_repeated_signal(signal, 'value')
 
     return signal
 
-def get_rsi_bbands_signal(price_data, upper_band, lower_band, rsi, buy_first=True):
+def get_rsi_bbands_signal(price_data, upper_band, lower_band, rsi, buy_first=True, remove_repeated_signals=True):
     """
     https://www.linkedin.com/pulse/algorithmic-trading-mean-reversion-using-python-bryan-chen/
     """
@@ -288,13 +307,14 @@ def get_rsi_bbands_signal(price_data, upper_band, lower_band, rsi, buy_first=Tru
     #signal = signal.fillna(0)
 
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
 
-    signal = remove_repeated_signal(signal, 'value')
+    if remove_repeated_signals:
+        signal = remove_repeated_signal(signal, 'value')
 
     return signal
 
-def get_dmi_signal(di_plus, di_minus, adx, adx_value=25.0, buy_first=True):
+def get_dmi_signal(di_plus, di_minus, adx, adx_value=25.0, buy_first=True, remove_repeated_signals=True):
     di_plus.columns = ['value']
     di_minus.columns = ['value']
     adx.columns = ['value']
@@ -305,9 +325,10 @@ def get_dmi_signal(di_plus, di_minus, adx, adx_value=25.0, buy_first=True):
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
 
     if buy_first:
-        signal.iloc[0]['value'] = 1.0
+        signal.at[0, 'value'] = 1.0
 
-    signal = remove_repeated_signal(signal, 'value')
+    if remove_repeated_signals:
+        signal = remove_repeated_signal(signal, 'value')
 
     return signal
 
@@ -431,5 +452,33 @@ def get_planBTC_strategy(rsi_value, buy_first=True):
             long = True
 
     signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+
+    return signal
+
+def get_rsi_hurst_signal(rsi, hurst_signal, buy_first=True):
+    """
+    BUY when:
+    - RSI is more than 75 and Persistence signal is 1
+    - RSI is less than 25 and Persistence signal is -1
+
+    SELL:
+    - RSI is more than 75 and Persistence signal is -1
+    - RSI is less than 25 and Persistence signal is 1
+    """
+    rsi.columns = ['value']
+    hurst_signal.columns = ['value']
+
+    signal = rsi.copy()
+    signal[(rsi > 75) & (hurst_signal == 1)] = 1.0
+    signal[(rsi < 25) & (hurst_signal == -1)] = 1.0
+    signal[(rsi > 75) & (hurst_signal == -1)] = -1.0
+    signal[(rsi < 25) & (hurst_signal == 1)] = -1.0
+
+    signal[(signal != 1.0) & (signal != -1.0)] = 0.0
+
+    if buy_first:
+        signal.at[0, 'value'] = 1.0
+
+    signal = remove_repeated_signal(signal, 'value')
 
     return signal
