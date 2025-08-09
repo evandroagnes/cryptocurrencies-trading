@@ -132,6 +132,7 @@ dmypy.json
 
 # Personal data
 config.yml
+trading-strategies.csv
 data/*-all.csv
 data/*-all.csv
 data/*.parquet
