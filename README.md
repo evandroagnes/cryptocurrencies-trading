@@ -68,7 +68,7 @@ Create a config file named `config.yml` based on `config.yml.example`, then upda
 
 **Create trade strategies:**
 
-Rename `trade-strategies.csv.sample` to `trade-strategies.csv` and update it with your strategies. Be careful with `CreateOrders` column!
+Copy `trade-strategies.csv.sample` to `trade-strategies.csv` and update it with your strategies. Be careful with `CreateOrders` column!
 
 - Symbol: symbol to trade and calculate statistics/strategy;
 - Interval: strategy interval;
