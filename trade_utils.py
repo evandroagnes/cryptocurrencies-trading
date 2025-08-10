@@ -168,6 +168,8 @@ def update_signal_by_strategy(df, signal_column):
         df['SignalSMACROSSStrategy8_20'] = get_cross_signal(df[['SMA8']].copy(), df[['SMA20']].copy())
     elif signal_column == 'SignalSMACROSSStrategy8_40':
         df['SignalSMACROSSStrategy8_40'] = get_cross_signal(df[['SMA8']].copy(), df[['SMA40']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy8_50':
+        df['SignalSMACROSSStrategy8_50'] = get_cross_signal(df[['SMA8']].copy(), df[['SMA50']].copy())
     elif signal_column == 'SignalSMACROSSStrategy8_70':
         df['SignalSMACROSSStrategy8_70'] = get_cross_signal(df[['SMA8']].copy(), df[['SMA70']].copy())
     elif signal_column == 'SignalSMACROSSStrategy10_30':
