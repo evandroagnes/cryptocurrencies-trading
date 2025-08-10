@@ -386,7 +386,7 @@ def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
                             message = 'Unable to BUY, ' + quote_asset + ' without balance: ' + str(quote_balance)
                     else:
                         message = side + ' ' + symbol + ' (' + interval + ' Trade): ' + message_strategy + '!'
-                elif df_trade[signal_column][-1] == -1:
+                elif df_trade[signal_column].iloc[-1] == -1:
                     side = 'SELL'
                     if create_orders:
                         ### SELL ORDER
