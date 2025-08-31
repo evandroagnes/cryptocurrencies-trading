@@ -1,5 +1,5 @@
-python-binance==1.0.27
-bt==1.1.0
+python-binance==1.0.28
+bt==1.1.2
 beautifulsoup4==4.12.3
 numpy==2.2.0
 pandas==2.2.3
