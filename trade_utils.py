@@ -160,6 +160,8 @@ def update_signal_by_strategy(df, signal_column):
         df['SignalSMACROSSStrategy3_50'] = get_cross_signal(df[['SMA3']].copy(), df[['SMA50']].copy())
     elif signal_column == 'SignalSMACROSSStrategy5_30':
         df['SignalSMACROSSStrategy5_30'] = get_cross_signal(df[['SMA5']].copy(), df[['SMA30']].copy())
+    elif signal_column == 'SignalSMACROSSStrategy5_40':
+        df['SignalSMACROSSStrategy5_40'] = get_cross_signal(df[['SMA5']].copy(), df[['SMA40']].copy())
     elif signal_column == 'SignalSMACROSSStrategy5_50':
         df['SignalSMACROSSStrategy5_50'] = get_cross_signal(df[['SMA5']].copy(), df[['SMA50']].copy())
     elif signal_column == 'SignalSMACROSSStrategy5_90':
@@ -248,17 +250,25 @@ def roll_oco_orders(client):
             orders_by_list_id = [order for order in orders if order['orderListId'] == order_list_id]
             # test if open orders is an oco order
             if len(orders_by_list_id) == 2:
+                # check the order type
+                order_type = 'STOP_LOSS'
+                if (any(order['type'] == 'STOP_LOSS_LIMIT' for order in orders_by_list_id)):
+                    order_type = 'STOP_LOSS_LIMIT'
+
                 # get current symbol price
-                symbol = [order['symbol'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0]
+                symbol = [order['symbol'] for order in orders_by_list_id if order['type'] == order_type][0]
                 current_price = get_lastest_price(client, symbol)
 
-                order_id_stop = [order['orderId'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0]
-                quantity = float([order['origQty'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0])
-                stop_price = float([order['stopPrice'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0])
-                limit_stop_price = float([order['price'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0])
+                order_id_stop = [order['orderId'] for order in orders_by_list_id if order['type'] == order_type][0]
+                quantity = float([order['origQty'] for order in orders_by_list_id if order['type'] == order_type][0])
+                stop_price = float([order['stopPrice'] for order in orders_by_list_id if order['type'] == order_type][0])
+                limit_stop_price = float([order['price'] for order in orders_by_list_id if order['type'] == order_type][0])
                 limit_price = float([order['price'] for order in orders_by_list_id if order['type'] == 'LIMIT_MAKER'][0])
-                side = [order['side'] for order in orders_by_list_id if order['type'] == 'STOP_LOSS_LIMIT'][0]
+                side = [order['side'] for order in orders_by_list_id if order['type'] == order_type][0]
                 trade_info = get_trade_info(client, symbol)
+
+                if (limit_stop_price == 0):
+                    limit_stop_price = stop_price
 
                 roll = False
                 new_limit_price = 0.0
@@ -291,16 +301,17 @@ def roll_oco_orders(client):
                     # recreate order with increment value
                     order = create_oco_order(
                         client=client,
+                        order_type = order_type,
                         symbol=symbol,
                         side=side,
                         quantity=quantity,
                         stop_price=get_trunc_value(new_stop_price, float(trade_info['min_price'])),
                         stop_limit_price=get_trunc_value(new_stop_limit_price, float(trade_info['min_price'])),
                         price=new_limit_price)
-                    
+
                     print(order)
                     telegram_bot_sendtext('OCO orders are rolled: ' + str(order))
-    
+
     return
 
 def process_candle(client, symbol, df, new_row, base_asset, quote_asset):
